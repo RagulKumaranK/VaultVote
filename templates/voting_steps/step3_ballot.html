@@ -1,0 +1,119 @@
+<!-- ================= STEP 3: ELECTRONIC VOTING MACHINE (EVM) ================= -->
+<div class="evm-unit d-none position-relative" id="sectionStep3">
+
+  <!-- Official Indian Tricolor Accent Stripe -->
+  <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%); z-index: 10;"></div>
+
+  <!-- AUTHENTIC EVM HARDWARE CASING TOP STRIP -->
+  <div class="evm-casing-top d-flex align-items-center justify-content-between px-3 px-md-4 py-1">
+    <div class="d-flex align-items-center gap-2">
+      <span class="evm-ready-led" title="EVM Ballot Unit Active"></span>
+      <span class="evm-casing-label">READY</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span
+        class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-0.5 rounded-pill fw-semibold"
+        style="font-size: 0.68rem; letter-spacing: 0.05em;">BALLOTING UNIT (M3)</span>
+      <span class="evm-casing-tag fw-bold">EVM BU-01</span>
+    </div>
+  </div>
+
+  <!-- CANDIDATE BALLOT ROWS -->
+  <div class="evm-ballot-sheet p-0">
+    {% for candidate in candidates %}
+    <div class="evm-row" id="evmRow{{ candidate.id }}">
+
+      <!-- 1. Serial Number Plate -->
+      <div class="evm-sno-col">
+        <div class="evm-sno-plate" title="Candidate Serial No. {{ candidate.id }}">
+          <span>{{ "%02d" % candidate.id }}</span>
+        </div>
+      </div>
+
+      <!-- 2. Candidate Name & Party Details (Bilingual Hierarchy) -->
+      <div class="evm-details-col">
+        {% if '(' in candidate.name and candidate.name.endswith(')') %}
+        {% set name_parts = candidate.name[:-1].split('(') %}
+        <div class="evm-cand-name">
+          <span class="evm-cand-main">{{ name_parts[0].strip() }}</span>
+          <span class="evm-cand-lang">({{ name_parts[1].strip() }})</span>
+        </div>
+        {% else %}
+        <div class="evm-cand-name">
+          <span class="evm-cand-main">{{ candidate.name }}</span>
+        </div>
+        {% endif %}
+        <div class="evm-cand-party">{{ candidate.party }}</div>
+      </div>
+
+      <!-- 3. Candidate Official Banner Strip (Edge-to-Edge 2.9:1) -->
+      <div class="evm-banner-col">
+        <div class="evm-banner-card shadow-xs" title="{{ candidate.name }}">
+          {% if candidate.banner_image %}
+          <img src="{{ url_for('static', filename='img/' ~ candidate.banner_image) }}" alt="{{ candidate.name }}"
+            class="evm-banner-bg-img">
+          {% else %}
+          <span class="fw-bold text-secondary">{{ candidate.name }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 4. Official Election Symbol -->
+      <div class="evm-symbol-col">
+        <div class="evm-symbol-card shadow-xs" title="Symbol: {{ candidate.symbol_name }}">
+          {% if candidate.symbol_image %}
+          <img src="{{ url_for('static', filename='img/' ~ candidate.symbol_image) }}" alt="{{ candidate.symbol_name }}"
+            class="evm-symbol-img">
+          {% else %}
+          <i class="bi {{ candidate.symbol_icon }} fs-2 text-dark"></i>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 5. Iconic Solid EVM Directional Guide Arrow -->
+      <div class="evm-arrow-col" aria-hidden="true" title="Point to Vote Indicator">
+        <svg class="evm-guide-arrow" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+        </svg>
+      </div>
+
+      <!-- 6. EVM Red LED Indicator Lamp with Chrome Bezel -->
+      <div class="evm-lamp-col">
+        <div class="evm-lamp-bezel" title="Vote Confirmation Lamp">
+          <div class="evm-lamp" id="lamp{{ candidate.id }}"></div>
+        </div>
+      </div>
+
+      <!-- 7. Tactile 3D EVM Blue Voting Button with Braille -->
+      <div class="evm-btn-col">
+        <button type="button" class="evm-vote-btn" data-id="{{ candidate.id }}" data-name="{{ candidate.name }}"
+          data-party="{{ candidate.party }}" data-symbol="{{ candidate.symbol_name }}"
+          data-banner="{% if candidate.banner_image %}{{ url_for('static', filename='img/' ~ candidate.banner_image) }}{% endif %}"
+          data-symbol-img="{% if candidate.symbol_image %}{{ url_for('static', filename='img/' ~ candidate.symbol_image) }}{% endif %}"
+          onclick="promptCastVoteFromButton(this)">
+          <span class="evm-braille" aria-hidden="true" title="Braille Index: {{ candidate.id }}">
+            <span class="b-dot {% if candidate.id in [1, 2, 3, 4, 5] %}b-active{% endif %}"></span>
+            <span class="b-dot {% if candidate.id in [3, 4, 5] %}b-active{% endif %}"></span>
+            <span class="b-dot {% if candidate.id in [2, 6, 7] %}b-active{% endif %}"></span>
+            <span class="b-dot {% if candidate.id in [4, 5] %}b-active{% endif %}"></span>
+          </span>
+          <span class="evm-btn-label">VOTE</span>
+        </button>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- AUTHENTIC EVM HARDWARE CASING BOTTOM STRIP -->
+  <div class="evm-casing-bottom d-flex align-items-center justify-content-between px-3 px-md-4 py-1">
+    <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.72rem;">
+      <i class="bi bi-shield-check text-primary"></i>
+      <span class="fw-semibold">Bharat Electronics Limited (BEL) &bull; Election Commission of India</span>
+    </div>
+    <div class="text-secondary fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.04em;">
+      Tamper-Evident Standalone Ballot Unit
+    </div>
+  </div>
+
+</div> <!-- Close sectionStep3 -->

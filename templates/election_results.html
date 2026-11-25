@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Election Results & Ballot Tally — VaultVote{% endblock %}
+{% block page_heading %}Election Results{% endblock %}
+{% block page_subheading %}
+<span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill d-inline-flex align-items-center gap-1.5 ms-2">
+  <span class="spinner-grow spinner-grow-sm text-success" role="status" style="width: 8px; height: 8px;"></span>
+  <i class="bi bi-broadcast"></i> Live EVM Ballot Tally
+</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- TOP SUMMARY & ACTIONS ROW -->
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1 rounded-pill text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+          ECI FORM 20 • GENERAL ELECTION BALLOT AUDIT
+        </span>
+      </div>
+      <p class="text-secondary small mb-0">
+        <i class="bi bi-clock-history me-1 text-primary"></i> Last Tally Sync: <strong>{{ results.timestamp }}</strong> • Polling Station: <strong>PS-042 (Central Booth)</strong>
+      </p>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex align-items-center gap-2 vv-no-print">
+      <a href="{{ url_for('election_results') }}" class="btn btn-outline-secondary btn-sm px-3 py-2 d-inline-flex align-items-center gap-2 shadow-xs" title="Refresh Live Tally">
+        <i class="bi bi-arrow-clockwise fs-6"></i>
+        <span>Refresh Count</span>
+      </a>
+      <button onclick="window.print()" class="btn btn-primary btn-sm px-3.5 py-2 d-inline-flex align-items-center gap-2 shadow-sm" title="Print Official Results Sheet">
+        <i class="bi bi-printer-fill fs-6"></i>
+        <span>Print Report</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4 KEY METRIC CARDS -->
+  <div class="row g-3 mb-4 align-items-stretch">
+    <!-- 1. Total Votes Cast -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100 position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 end-0" style="height: 3px; background: #2563eb;"></div>
+        <div class="vv-stat-icon vv-icon-blue">
+          <i class="bi bi-box-seam-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value text-primary">{{ results.total_votes }}</div>
+          <div class="vv-stat-label">Total Votes Cast</div>
+          <small class="text-muted" style="font-size: 0.76rem;">{{ results.turnout_pct }}% Turnout</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Leading Candidate -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100 position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 end-0" style="height: 3px; background: #10b981;"></div>
+        <div class="vv-stat-icon vv-icon-green">
+          <i class="bi bi-trophy-fill"></i>
+        </div>
+        <div style="min-width: 0;">
+          <div class="fw-bold text-dark text-truncate" style="font-size: 1.15rem;">
+            {% if results.leader %}
+              {% if '(' in results.leader.name %}
+                {{ results.leader.name.split('(')[0].strip() }}
+              {% else %}
+                {{ results.leader.name }}
+              {% endif %}
+            {% else %}
+              No Votes Yet
+            {% endif %}
+          </div>
+          <div class="vv-stat-label">Leading Candidate</div>
+          <small class="text-success fw-semibold" style="font-size: 0.76rem;">
+            {% if results.leader %}
+              {{ results.leader.votes_count }} Votes ({{ results.leader.share_pct }}%)
+            {% else %}
+              Awaiting ballots
+            {% endif %}
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Margin of Victory -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100 position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 end-0" style="height: 3px; background: #f59e0b;"></div>
+        <div class="vv-stat-icon vv-icon-gold">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value text-warning-emphasis">
+            {% if results.is_tie %}
+              Tied
+            {% elif results.has_votes %}
+              +{{ results.margin }}
+            {% else %}
+              0
+            {% endif %}
+          </div>
+          <div class="vv-stat-label">Victory Margin</div>
+          <small class="text-muted" style="font-size: 0.76rem;">
+            {% if results.is_tie %}
+              Equal votes on top
+            {% elif results.has_votes and results.runner_up %}
+              Lead over 2nd place
+            {% elif results.has_votes %}
+              Unanimous lead
+            {% else %}
+              No votes recorded
+            {% endif %}
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Total Registered Electors -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100 position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 end-0" style="height: 3px; background: #8b5cf6;"></div>
+        <div class="vv-stat-icon vv-icon-purple">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ results.total_voters }}</div>
+          <div class="vv-stat-label">Registered Electors</div>
+          <small class="text-muted" style="font-size: 0.76rem;">Eligible voters on roll</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADER SPOTLIGHT HERO CARD (SHOWN WHEN VOTES EXIST) -->
+  {% if results.has_votes and results.leader %}
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff;">
+    <!-- Indian Tricolor Accent Stripe -->
+    <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%); z-index: 5;"></div>
+
+    <div class="card-body p-4 p-md-5 position-relative" style="z-index: 2;">
+      <div class="row align-items-center g-4">
+        
+        <!-- Left: Candidate Banner Preview -->
+        <div class="col-12 col-md-5 col-lg-4 text-center">
+          <div class="p-2 bg-white bg-opacity-10 rounded-3 border border-white border-opacity-15 shadow-sm d-inline-block w-100" style="max-width: 380px;">
+            {% if results.leader.banner_image %}
+            <img src="{{ url_for('static', filename='img/' ~ results.leader.banner_image) }}" 
+                 alt="{{ results.leader.name }}" 
+                 class="img-fluid rounded-2 shadow-xs" 
+                 style="aspect-ratio: 2.88 / 1; object-fit: cover; width: 100%;">
+            {% else %}
+            <div class="p-3 text-white fw-bold">{{ results.leader.name }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Right: Candidate Status & Metrics -->
+        <div class="col-12 col-md-7 col-lg-8">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 rounded-pill shadow-xs d-inline-flex align-items-center gap-1.5" style="font-size: 0.82rem;">
+              <i class="bi bi-trophy-fill"></i> ELECTION FRONTRUNNER
+            </span>
+            <span class="badge bg-white bg-opacity-15 text-white border border-white border-opacity-20 px-2.5 py-1 rounded-pill" style="font-size: 0.75rem;">
+              Serial No. {{ "%02d" % results.leader.id }}
+            </span>
+          </div>
+
+          <!-- Bilingual Candidate Name -->
+          {% if '(' in results.leader.name and results.leader.name.endswith(')') %}
+            {% set leader_parts = results.leader.name[:-1].split('(') %}
+            <h2 class="fw-bold mb-1 text-white d-flex flex-wrap align-items-baseline gap-2">
+              <span>{{ leader_parts[0].strip() }}</span>
+              <span class="text-light text-opacity-75 fs-5">({{ leader_parts[1].strip() }})</span>
+            </h2>
+          {% else %}
+            <h2 class="fw-bold mb-1 text-white">{{ results.leader.name }}</h2>
+          {% endif %}
+
+          <p class="text-light text-opacity-90 mb-3" style="font-size: 0.95rem;">
+            <i class="bi bi-flag-fill text-warning me-1"></i> {{ results.leader.party }}
+          </p>
+
+          <!-- Vote Stat Progress -->
+          <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-white border-opacity-10 mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1.5">
+              <span class="small text-light text-opacity-75">Popular Vote Share</span>
+              <span class="fw-bold text-warning fs-5">{{ results.leader.share_pct }}%</span>
+            </div>
+            <div class="progress" style="height: 10px; background-color: rgba(255,255,255,0.15);">
+              <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ results.leader.share_pct }}%;" aria-valuenow="{{ results.leader.share_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2 small text-light text-opacity-75">
+              <span><strong>{{ results.leader.votes_count }}</strong> of {{ results.total_votes }} votes</span>
+              {% if results.is_tie %}
+              <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-1"></i> Tied with runner-up</span>
+              {% elif results.runner_up %}
+              <span class="text-info"><i class="bi bi-check-circle-fill me-1"></i> +{{ results.margin }} votes ahead of 2nd place</span>
+              {% else %}
+              <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Leading with 100% of votes cast</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CANDIDATE LEADERBOARD TABLE -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white py-3 px-4 d-flex align-items-center justify-content-between border-bottom">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-fill text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold text-dark">Candidate Leaderboard & Vote Share</h5>
+      </div>
+      <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill fw-medium" style="font-size: 0.78rem;">
+        {{ results.candidates|length }} Contesting Candidates
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small text-secondary">
+          <tr>
+            <th class="ps-4" style="width: 80px;">Rank</th>
+            <th style="min-width: 240px;">Candidate Name</th>
+            <th style="min-width: 200px;">Party Affiliation</th>
+            <th style="width: 140px;">Official Symbol</th>
+            <th style="min-width: 220px;">Vote Share</th>
+            <th class="text-center" style="width: 120px;">Votes Count</th>
+            <th class="text-center" style="width: 110px;">Share %</th>
+            <th class="text-end pe-4" style="width: 130px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for candidate in results.candidates %}
+          <tr class="{% if loop.first and results.has_votes and not results.is_tie %}bg-success-subtle bg-opacity-25{% endif %}">
+            
+            <!-- 1. Rank / Medal -->
+            <td class="ps-4">
+              {% if loop.index == 1 and results.has_votes and candidate.votes_count > 0 %}
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark fw-bold shadow-xs" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Rank 1: Leading">
+                  🥇
+                </span>
+              {% elif loop.index == 2 and results.has_votes and candidate.votes_count > 0 %}
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-secondary-subtle text-secondary fw-bold" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Rank 2: Runner-up">
+                  🥈
+                </span>
+              {% elif loop.index == 3 and results.has_votes and candidate.votes_count > 0 %}
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-amber-subtle text-dark fw-bold" style="width: 32px; height: 32px; font-size: 0.9rem; background-color: #fed7aa;" title="Rank 3">
+                  🥉
+                </span>
+              {% else %}
+                <span class="badge bg-light text-secondary border font-monospace fw-semibold" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;">
+                  {{ loop.index }}
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- 2. Candidate Name & Thumbnail -->
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                {% if candidate.banner_image %}
+                <img src="{{ url_for('static', filename='img/' ~ candidate.banner_image) }}" 
+                     alt="{{ candidate.name }}" 
+                     class="rounded border shadow-xs" 
+                     style="width: 64px; height: 36px; object-fit: cover;">
+                {% else %}
+                <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width: 64px; height: 36px;">
+                  <i class="bi bi-person"></i>
+                </div>
+                {% endif %}
+
+                <div>
+                  {% if '(' in candidate.name and candidate.name.endswith(')') %}
+                    {% set parts = candidate.name[:-1].split('(') %}
+                    <div class="fw-bold text-dark">{{ parts[0].strip() }}</div>
+                    <small class="text-secondary fw-medium">({{ parts[1].strip() }})</small>
+                  {% else %}
+                    <div class="fw-bold text-dark">{{ candidate.name }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+
+            <!-- 3. Party Affiliation -->
+            <td>
+              <div class="text-dark small fw-semibold">{{ candidate.party }}</div>
+            </td>
+
+            <!-- 4. Symbol -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% if candidate.symbol_image %}
+                <img src="{{ url_for('static', filename='img/' ~ candidate.symbol_image) }}" 
+                     alt="{{ candidate.symbol_name }}" 
+                     class="rounded border bg-white p-1" 
+                     style="width: 36px; height: 36px; object-fit: contain;">
+                {% else %}
+                <div class="rounded bg-light border p-1 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                  <i class="bi {{ candidate.symbol_icon }}"></i>
+                </div>
+                {% endif %}
+                <span class="small text-secondary fw-medium">{{ candidate.symbol_name }}</span>
+              </div>
+            </td>
+
+            <!-- 5. Vote Share Visual Bar -->
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <div class="d-flex justify-content-between small text-secondary">
+                  <span>{{ candidate.share_pct }}%</span>
+                  <span class="text-muted">{{ candidate.votes_count }} votes</span>
+                </div>
+                <div class="progress" style="height: 8px; border-radius: 6px; background-color: #f1f5f9;">
+                  <div class="progress-bar" 
+                       role="progressbar" 
+                       style="width: {{ candidate.share_pct }}%; background-color: {{ candidate.color or '#2563eb' }};" 
+                       aria-valuenow="{{ candidate.share_pct }}" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- 6. Votes Count -->
+            <td class="text-center">
+              <span class="fw-bold font-monospace fs-6 text-dark">{{ candidate.votes_count }}</span>
+            </td>
+
+            <!-- 7. Share % -->
+            <td class="text-center">
+              <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle font-monospace px-2.5 py-1">
+                {{ candidate.share_pct }}%
+              </span>
+            </td>
+
+            <!-- 8. Status Badge -->
+            <td class="text-end pe-4">
+              {% if loop.first and results.has_votes and candidate.votes_count > 0 %}
+                {% if results.is_tie %}
+                  <span class="badge bg-warning text-dark"><i class="bi bi-pause-circle me-1"></i> TIED</span>
+                {% else %}
+                  <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i> LEADING</span>
+                {% endif %}
+              {% elif loop.index == 2 and results.has_votes and candidate.votes_count > 0 %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">RUNNER-UP</span>
+              {% elif candidate.name.startswith('None of the Above') %}
+                <span class="badge bg-light text-secondary border">NOTA</span>
+              {% else %}
+                <span class="badge bg-light text-muted border">TRAILING</span>
+              {% endif %}
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ELECTORAL INTEGRITY & AUDIT VERIFICATION BOX -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-light">
+    <div class="card-body p-4">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-md-auto text-center text-md-start">
+          <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary">
+            <i class="bi bi-shield-lock-fill fs-2"></i>
+          </div>
+        </div>
+        <div class="col-12 col-md">
+          <h5 class="fw-bold text-dark mb-1">Cryptographic & Biometric EVM Integrity Verification</h5>
+          <p class="text-secondary small mb-2">
+            Every ballot recorded above has undergone mandatory multi-factor authentication (Biometric Facial/Fingerprint verification & Optical QR Token validation) prior to EVM activation.
+          </p>
+          <div class="d-flex flex-wrap gap-3 small text-secondary">
+            <span><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Single Vote Enforcement:</strong> One voter = One vote enforced via database UNIQUE constraint.</span>
+            <span><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Audit Logging:</strong> All ballot casts stamped with ISO-8601 timestamps and audit logs.</span>
+            <span><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>Zero Tampering:</strong> Tamper-evident architecture with zero external networking required.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STYLES SPECIFIC TO ELECTION RESULTS & PRINT REPORT -->
+<style>
+@media print {
+  body {
+    background: #ffffff !important;
+    font-size: 12pt;
+  }
+  .vv-sidebar,
+  .vv-topbar,
+  .vv-no-print,
+  .btn {
+    display: none !important;
+  }
+  .vv-main-wrapper {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+  .vv-page-content {
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    break-inside: avoid;
+  }
+  .table {
+    font-size: 10pt;
+  }
+}
+</style>
+{% endblock %}

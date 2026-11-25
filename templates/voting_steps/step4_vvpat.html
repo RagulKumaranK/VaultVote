@@ -1,0 +1,29 @@
+<!-- ================= STEP 4: VVPAT CONFIRMATION ================= -->
+<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 text-center d-none position-relative" id="sectionStep4">
+  <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-3">
+    <i class="bi bi-check-circle-fill fs-1"></i>
+  </div>
+  <h3 class="fw-bold text-success mb-1">Vote Successfully Cast!</h3>
+  <p class="text-muted small mb-4">Your vote has been securely recorded.</p>
+
+  <!-- Digital VVPAT Printed Slip Window -->
+  <div class="vvpat-slip text-start mb-4">
+    <div class="text-center border-bottom pb-2 mb-3">
+      <div class="fw-bold" style="font-size: 0.85rem;">VVPAT AUDIT SLIP</div>
+      <div class="text-muted" style="font-size: 0.7rem;">Election Commission of India</div>
+    </div>
+    <div class="small mb-1"><span class="text-muted">Voter ID:</span> <strong id="vvpatVoterId">--</strong></div>
+    <div class="small mb-1"><span class="text-muted">Candidate:</span> <strong id="vvpatCandidateName">--</strong></div>
+    <div class="small mb-1"><span class="text-muted">Party:</span> <span id="vvpatCandidateParty">--</span></div>
+    <div class="small mb-2"><span class="text-muted">Symbol:</span> <strong id="vvpatCandidateSymbol">--</strong></div>
+    <div class="small text-muted pt-2 border-top" style="font-size: 0.72rem;">
+      Timestamp: <span id="vvpatTimestamp">--</span>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-center gap-2">
+    <button type="button" class="btn btn-primary px-4 py-2.5 fw-semibold" onclick="resetKiosk()">
+      <i class="bi bi-arrow-repeat me-1"></i> Next Voter
+    </button>
+  </div>
+</div> <!-- Close sectionStep4 -->

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Voter ID Card — {{ voter.voter_id }} — VaultVote{% endblock %}
+{% block page_heading %}Voter ID Card{% endblock %}
+{% block page_subheading %}
+  <span class="badge bg-success font-monospace">{{ voter.voter_id }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- MODERN 3-STEP PROGRESS STEPPER -->
+  <div class="vv-stepper vv-no-print">
+    <div class="vv-step-item completed">
+      <div class="vv-step-num"><i class="bi bi-check-lg"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title">1. Voter Details</div>
+        <div class="vv-step-desc">Personal & Contact Info</div>
+      </div>
+    </div>
+    <div class="vv-step-item completed">
+      <div class="vv-step-num"><i class="bi bi-check-lg"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title">2. Biometrics</div>
+        <div class="vv-step-desc">Face Photo & Fingerprint</div>
+      </div>
+    </div>
+    <div class="vv-step-item active" style="border-color: #10b981; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);">
+      <div class="vv-step-num" style="background: #10b981; color: white;"><i class="bi bi-patch-check-fill"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title" style="color: #059669;">3. Voter ID Card</div>
+        <div class="vv-step-desc text-success">Generated & Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS NOTIFICATION BAR -->
+  <div class="alert alert-success d-flex align-items-center justify-content-between p-3 mb-4 shadow-sm vv-no-print">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-patch-check-fill fs-2 me-3 text-success"></i>
+      <div>
+        <h6 class="fw-bold mb-0">Voter Registration Completed</h6>
+        <div class="small">The digital voter credential has been generated and enrolled in the system.</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('download_voter_card', voter_id=voter.voter_id) }}" class="btn btn-dark btn-sm d-flex align-items-center gap-1 shadow-sm">
+        <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+        <span>Download PDF Card</span>
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1">
+        <i class="bi bi-printer-fill"></i>
+        <span>Print</span>
+      </button>
+      <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+              data-bs-toggle="modal" 
+              data-bs-target="#deleteVoterModal"
+              data-voter-id="{{ voter.voter_id }}"
+              data-voter-name="{{ voter.full_name }}">
+        <i class="bi bi-trash3-fill"></i>
+        <span>Delete</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- OFFICIAL DIGITAL VOTER ID CARD PREVIEW -->
+  <div class="vv-idcard-wrapper">
+    <div class="vv-card-preview-box shadow-lg">
+      <img src="{{ url_for('static', filename='uploads/cards/' ~ voter.voter_id ~ '_card.png') }}?t={{ voter.updated_at }}" 
+           alt="Voter ID Card — {{ voter.voter_id }}" 
+           class="w-100 h-auto d-block">
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div class="row g-3 justify-content-center mt-3 vv-no-print" style="max-width: 720px; margin: 0 auto;">
+    <div class="col-12 col-sm-4">
+      <a href="{{ url_for('download_voter_card', voter_id=voter.voter_id) }}" class="btn btn-vv-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-file-pdf"></i>
+        <span>Download PDF</span>
+      </a>
+    </div>
+
+    <div class="col-12 col-sm-4">
+      <button onclick="window.print()" class="btn btn-outline-dark w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-printer"></i>
+        <span>Print Card</span>
+      </button>
+    </div>
+
+    <div class="col-12 col-sm-4">
+      <a href="{{ url_for('download_voter_qr', voter_id=voter.voter_id) }}" class="btn btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-qr-code"></i>
+        <span>Download QR</span>
+      </a>
+    </div>
+
+    <div class="col-12 text-center mt-4">
+      <a href="{{ url_for('register_voter') }}" class="btn btn-link text-decoration-none me-3">
+        <i class="bi bi-person-plus me-1"></i> Register Another Voter
+      </a>
+      <a href="{{ url_for('registered_voters') }}" class="btn btn-link text-decoration-none text-secondary">
+        <i class="bi bi-people me-1"></i> View All Voters
+      </a>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="modal fade" id="deleteVoterModal" tabindex="-1" aria-labelledby="deleteVoterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white border-0 py-3">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="deleteVoterModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirm Permanent Deletion
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex p-3 rounded-circle bg-danger-subtle text-danger mb-3">
+            <i class="bi bi-person-x-fill fs-1"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-1" id="modalVoterName">Voter Name</h5>
+          <div class="badge bg-secondary font-monospace fs-6 mb-3" id="modalVoterId">WRM2745001</div>
+          <p class="text-secondary small mb-0">
+            Are you sure you want to permanently delete this voter? This will remove all personal records, face biometrics, fingerprint templates, QR tokens, and generated ID cards.
+            <br><strong class="text-danger">This action cannot be undone.</strong>
+          </p>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+          <form id="deleteVoterForm" method="POST" action="" class="m-0">
+            <button type="submit" class="btn btn-danger px-4 d-flex align-items-center gap-2 shadow-sm">
+              <i class="bi bi-trash3-fill"></i> Delete Voter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteVoterModal');
+      if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          const voterId = button.getAttribute('data-voter-id');
+          const voterName = button.getAttribute('data-voter-name');
+          document.getElementById('modalVoterId').textContent = voterId;
+          document.getElementById('modalVoterName').textContent = voterName;
+          document.getElementById('deleteVoterForm').action = '/voter/delete/' + encodeURIComponent(voterId);
+        });
+      }
+    });
+  </script>
+
+</div>
+{% endblock %}

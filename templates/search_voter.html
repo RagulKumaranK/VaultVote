@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Search Voter — VaultVote{% endblock %}
+{% block page_heading %}Search Voter{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 900px;">
+
+  <!-- SEARCH INPUT CARD -->
+  <div class="vv-card mb-4">
+    <div class="vv-card-header bg-white border-bottom">
+      <h5 class="mb-0"><i class="bi bi-search text-primary me-2"></i> Search Voter</h5>
+    </div>
+    <div class="vv-card-body p-4">
+      <form method="GET" action="{{ url_for('search_voter') }}">
+        <div class="mb-3">
+          <label for="query" class="form-label small fw-semibold text-secondary">Enter Voter ID, Aadhaar Number, or Full Name</label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-person-bounding-box"></i></span>
+            <input type="text" class="form-control" id="query" name="query" value="{{ query }}" required placeholder="e.g. WRM2745001 or 556677889900 or Rahul Sharma" autofocus>
+            <button type="submit" class="btn btn-vv-primary px-4">
+              <i class="bi bi-search me-1"></i> Search
+            </button>
+          </div>
+        </div>
+        <div class="text-muted small">
+          <i class="bi bi-info-circle me-1"></i> You can search by Voter ID (e.g. <code>WRM2745001</code>), 12-digit Aadhaar number, or voter name.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SEARCH RESULT PRESENTATION -->
+  {% if searched %}
+    {% if result %}
+      <div class="card border-0 shadow-sm bg-white overflow-hidden mb-4">
+        <div class="card-header bg-primary text-white py-3 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-person-check-fill fs-5"></i>
+            <h6 class="mb-0 fw-bold">Voter Record Details</h6>
+          </div>
+          <span class="badge bg-light text-dark font-monospace fs-6">{{ result.voter_id }}</span>
+        </div>
+
+        <div class="card-body p-4">
+          <div class="row g-4 align-items-center">
+            <!-- Photo & QR Column -->
+            <div class="col-12 col-md-4 text-center border-end">
+              {% if result.photo_path %}
+                <img src="{{ url_for('static', filename=result.photo_path) }}" alt="Voter Photo" class="rounded border shadow-sm mb-3" style="width: 140px; height: 165px; object-fit: cover;">
+              {% else %}
+                <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted mx-auto mb-3" style="width: 140px; height: 165px;">
+                  <i class="bi bi-person fs-1"></i>
+                </div>
+              {% endif %}
+
+              <div>
+                <span class="badge {% if result.registration_status == 'COMPLETED' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                  <i class="bi bi-check-circle me-1"></i> {{ result.registration_status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Details Column -->
+            <div class="col-12 col-md-8">
+              <h4 class="fw-bold text-dark mb-1">{{ result.full_name }}</h4>
+              <p class="text-muted small mb-3">Father's Name: <strong>{{ result.father_name }}</strong></p>
+
+              <div class="row g-2 small mb-3">
+                <div class="col-sm-4 text-muted">DOB / Age:</div>
+                <div class="col-sm-8 fw-semibold">{{ result.dob }} ({{ result.age }} Years, {{ result.gender }})</div>
+
+                <div class="col-sm-4 text-muted">Aadhaar Number:</div>
+                <div class="col-sm-8 font-monospace">{{ result.aadhaar_masked }}</div>
+
+                <div class="col-sm-4 text-muted">Mobile Number:</div>
+                <div class="col-sm-8 font-monospace">+91 {{ result.mobile }}</div>
+
+                <div class="col-sm-4 text-muted">Address:</div>
+                <div class="col-sm-8">{{ result.address }}, {{ result.district }}, {{ result.state }} - {{ result.pincode }}</div>
+
+                <div class="col-sm-4 text-muted">Face Biometric:</div>
+                <div class="col-sm-8">
+                  {% if result.face_status == 'ENROLLED' %}
+                    <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Enrolled</span>
+                  {% else %}
+                    <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Pending</span>
+                  {% endif %}
+                </div>
+
+                <div class="col-sm-4 text-muted">Fingerprint:</div>
+                <div class="col-sm-8">
+                  {% if result.fingerprint_status == 'ENROLLED' %}
+                    <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Enrolled <span class="badge bg-secondary-subtle text-secondary border fw-normal ms-1" style="font-size: 0.7rem;">Software Simulated</span></span>
+                  {% else %}
+                    <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Pending</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 border-top">
+                <div class="d-flex flex-wrap gap-2">
+                  {% if result.registration_status == 'COMPLETED' %}
+                    <a href="{{ url_for('view_voter_card', voter_id=result.voter_id) }}" class="btn btn-vv-primary btn-sm">
+                      <i class="bi bi-card-heading me-1"></i> View Voter Card
+                    </a>
+                    <a href="{{ url_for('download_voter_card', voter_id=result.voter_id) }}" class="btn btn-outline-dark btn-sm">
+                      <i class="bi bi-download me-1"></i> Download PDF Card
+                    </a>
+                    {% if result.qr_image_path %}
+                      <a href="{{ url_for('download_voter_qr', voter_id=result.voter_id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-qr-code me-1"></i> Download QR
+                      </a>
+                    {% endif %}
+                  {% else %}
+                    <a href="{{ url_for('biometric_enrollment', voter_id=result.voter_id) }}" class="btn btn-warning btn-sm text-dark fw-semibold">
+                      <i class="bi bi-fingerprint me-1"></i> Complete Biometrics
+                    </a>
+                  {% endif %}
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                          data-bs-toggle="modal" 
+                          data-bs-target="#deleteVoterModal"
+                          data-voter-id="{{ result.voter_id }}"
+                          data-voter-name="{{ result.full_name }}">
+                    <i class="bi bi-trash3-fill"></i>
+                    <span>Delete Voter</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-warning d-flex align-items-center shadow-sm p-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-2 text-warning me-3"></i>
+        <div>
+          <h6 class="fw-bold mb-1">No Voter Record Found</h6>
+          <div>No voter found matching "<strong>{{ query }}</strong>". Please check the Voter ID, Aadhaar number, or name and try again.</div>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="modal fade" id="deleteVoterModal" tabindex="-1" aria-labelledby="deleteVoterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white border-0 py-3">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="deleteVoterModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirm Permanent Deletion
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex p-3 rounded-circle bg-danger-subtle text-danger mb-3">
+            <i class="bi bi-person-x-fill fs-1"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-1" id="modalVoterName">Voter Name</h5>
+          <div class="badge bg-secondary font-monospace fs-6 mb-3" id="modalVoterId">WRM2745001</div>
+          <p class="text-secondary small mb-0">
+            Are you sure you want to permanently delete this voter? This will remove all personal records, face biometrics, fingerprint templates, QR tokens, and generated ID cards.
+            <br><strong class="text-danger">This action cannot be undone.</strong>
+          </p>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+          <form id="deleteVoterForm" method="POST" action="" class="m-0">
+            <button type="submit" class="btn btn-danger px-4 d-flex align-items-center gap-2 shadow-sm">
+              <i class="bi bi-trash3-fill"></i> Delete Voter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteVoterModal');
+      if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          const voterId = button.getAttribute('data-voter-id');
+          const voterName = button.getAttribute('data-voter-name');
+          document.getElementById('modalVoterId').textContent = voterId;
+          document.getElementById('modalVoterName').textContent = voterName;
+          document.getElementById('deleteVoterForm').action = '/voter/delete/' + encodeURIComponent(voterId);
+        });
+      }
+    });
+  </script>
+
+</div>
+{% endblock %}

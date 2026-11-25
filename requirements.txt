@@ -1,0 +1,25 @@
+# VaultVote — Smart Biometric Voting System (Laptop Only)
+# Core Web Framework
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# Biometric & Computer Vision (ArcFace 512-d & YuNet)
+opencv-python>=4.8.0
+numpy>=1.24.0
+onnxruntime>=1.16.0
+
+# Text-to-Speech Audio Guidance
+edge-tts>=7.0.0
+
+# QR Code Generation & Imaging
+qrcode[pil]>=8.0
+Pillow>=10.0.0
+
+# PDF Voter ID Card Generation
+reportlab>=4.0.0
+fpdf2>=2.8.0
+
+# Optional: dlib-based face_recognition (requires Visual Studio C++ on Windows)
+# The application automatically uses OpenCV's real-time Haar Cascade & Biometric
+# Feature Embedding when dlib is not installed, so this package is optional:
+# face-recognition>=1.3.0

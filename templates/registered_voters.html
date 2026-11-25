@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Registered Voters — VaultVote{% endblock %}
+{% block page_heading %}Registered Voters{% endblock %}
+{% block page_subheading %}
+  <span class="badge bg-secondary">{{ voters|length }} Records</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- SEARCH & FILTER TOOLBAR -->
+  <div class="card border-0 shadow-sm bg-white mb-4">
+    <div class="card-body p-3">
+      <form method="GET" action="{{ url_for('registered_voters') }}" class="row g-2 align-items-center">
+        <div class="col-12 col-md-6 col-lg-5">
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" name="q" value="{{ search_q }}" placeholder="Search by Voter ID, Name, Mobile, or District...">
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-3">
+          <select class="form-select" name="status">
+            <option value="">All Statuses</option>
+            <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>Completed Only</option>
+            <option value="INCOMPLETE" {% if status_filter == 'INCOMPLETE' %}selected{% endif %}>Incomplete Only</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-vv-primary px-3">
+            <i class="bi bi-funnel me-1"></i> Filter
+          </button>
+          {% if search_q or status_filter %}
+            <a href="{{ url_for('registered_voters') }}" class="btn btn-outline-secondary">Reset</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VOTERS DATA TABLE -->
+  <div class="vv-card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small text-secondary">
+          <tr>
+            <th>Photo</th>
+            <th>Voter ID</th>
+            <th>Name & Father</th>
+            <th>DOB / Gender</th>
+            <th>Aadhaar</th>
+            <th>Face</th>
+            <th>Fingerprint</th>
+            <th>QR Code</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if voters %}
+            {% for voter in voters %}
+              <tr>
+                <td>
+                  {% if voter.photo_path %}
+                    <img src="{{ url_for('static', filename=voter.photo_path) }}" alt="Photo" class="rounded border" style="width: 40px; height: 46px; object-fit: cover;">
+                  {% else %}
+                    <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width: 40px; height: 46px;">
+                      <i class="bi bi-person fs-5"></i>
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="fw-bold font-monospace text-primary">{{ voter.voter_id }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark">{{ voter.full_name }}</div>
+                  <div class="small text-muted">Father: {{ voter.father_name }}</div>
+                </td>
+                <td>
+                  <div class="text-dark">{{ voter.dob }}</div>
+                  <small class="text-muted">{{ voter.gender }}, {{ voter.age }} Yrs</small>
+                </td>
+                <td>
+                  <span class="font-monospace text-muted small">{{ voter.aadhaar_masked }}</span>
+                </td>
+                <td>
+                  {% if voter.face_status == 'ENROLLED' %}
+                    <span class="badge badge-vv-success"><i class="bi bi-check2"></i> Enrolled</span>
+                  {% else %}
+                    <span class="badge badge-vv-pending"><i class="bi bi-clock"></i> Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if voter.fingerprint_status == 'ENROLLED' %}
+                    <span class="badge badge-vv-success" title="Software Simulated"><i class="bi bi-check2"></i> Enrolled (Sim)</span>
+                  {% else %}
+                    <span class="badge badge-vv-pending"><i class="bi bi-clock"></i> Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if voter.qr_token %}
+                    <span class="badge bg-primary-subtle text-primary border"><i class="bi bi-qr-code"></i> Issued</span>
+                  {% else %}
+                    <span class="badge bg-light text-muted border">Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if voter.registration_status == 'COMPLETED' %}
+                    <span class="badge bg-success"><i class="bi bi-patch-check"></i> Completed</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Incomplete</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <div class="d-inline-flex align-items-center gap-1">
+                    {% if voter.registration_status == 'COMPLETED' %}
+                      <a href="{{ url_for('view_voter_card', voter_id=voter.voter_id) }}" class="btn btn-outline-primary btn-sm" title="View Voter Card">
+                        <i class="bi bi-card-heading"></i> View
+                      </a>
+                      <a href="{{ url_for('download_voter_card', voter_id=voter.voter_id) }}" class="btn btn-outline-dark btn-sm" title="Download PDF Card">
+                        <i class="bi bi-download"></i>
+                      </a>
+                    {% else %}
+                      <a href="{{ url_for('biometric_enrollment', voter_id=voter.voter_id) }}" class="btn btn-primary btn-sm" title="Complete Biometrics">
+                        <i class="bi bi-fingerprint"></i> Complete
+                      </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                            title="Delete Voter"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteVoterModal"
+                            data-voter-id="{{ voter.voter_id }}"
+                            data-voter-name="{{ voter.full_name }}">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="10" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                No voter records found.
+                {% if search_q %}
+                  <div class="mt-2">
+                    <a href="{{ url_for('registered_voters') }}" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="modal fade" id="deleteVoterModal" tabindex="-1" aria-labelledby="deleteVoterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white border-0 py-3">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="deleteVoterModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirm Permanent Deletion
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex p-3 rounded-circle bg-danger-subtle text-danger mb-3">
+            <i class="bi bi-person-x-fill fs-1"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-1" id="modalVoterName">Voter Name</h5>
+          <div class="badge bg-secondary font-monospace fs-6 mb-3" id="modalVoterId">WRM2745001</div>
+          <p class="text-secondary small mb-0">
+            Are you sure you want to permanently delete this voter? This will remove all personal records, face biometrics, fingerprint templates, QR tokens, and generated ID cards.
+            <br><strong class="text-danger">This action cannot be undone.</strong>
+          </p>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+          <form id="deleteVoterForm" method="POST" action="" class="m-0">
+            <button type="submit" class="btn btn-danger px-4 d-flex align-items-center gap-2 shadow-sm">
+              <i class="bi bi-trash3-fill"></i> Delete Voter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteVoterModal');
+      if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          const voterId = button.getAttribute('data-voter-id');
+          const voterName = button.getAttribute('data-voter-name');
+          document.getElementById('modalVoterId').textContent = voterId;
+          document.getElementById('modalVoterName').textContent = voterName;
+          document.getElementById('deleteVoterForm').action = '/voter/delete/' + encodeURIComponent(voterId);
+        });
+      }
+    });
+  </script>
+
+</div>
+{% endblock %}

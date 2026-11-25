@@ -1,0 +1,275 @@
+<!-- ================= STEP 2: BIOMETRIC AUTHENTICATION ================= -->
+<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 d-none position-relative" id="sectionStep2">
+
+  <!-- Header & Official Status Row -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-3 mb-3 gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="kiosk-badge-icon">
+        <i class="bi bi-person-bounding-box"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h4 class="fw-bold text-dark mb-0">Biometric Verification</h4>
+          <span
+            class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-semibold"
+            style="font-size: 0.72rem;">Step 2</span>
+        </div>
+        <div class="text-secondary small">Verify your face against the registered voter photo</div>
+      </div>
+    </div>
+
+    <!-- Official Registry Badge -->
+    <div class="d-flex align-items-center gap-2">
+      <span
+        class="badge bg-light text-secondary border border-secondary-subtle px-3 py-1.5 rounded-pill d-inline-flex align-items-center gap-2"
+        style="font-size: 0.72rem;">
+        <i class="bi bi-shield-check text-primary"></i>
+        <span class="fw-semibold">ECI Registry Match</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- 2-COLUMN BALANCED SPLIT -->
+  <div class="row g-4 align-items-stretch">
+
+    <!-- LEFT COLUMN: OFFICIAL VOTER IDENTITY CARD & INSTRUCTIONS -->
+    <div class="col-12 col-lg-6 d-flex flex-column">
+      <div class="kiosk-console-card flex-grow-1">
+        <!-- Card Header -->
+        <div class="kiosk-card-header">
+          <span class="fw-semibold small text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-person-badge-fill text-primary fs-5"></i>
+            <span>Registered Voter Record</span>
+          </span>
+          <span class="badge bg-light text-success border border-success-subtle px-2.5 py-1 rounded-pill"
+            style="font-size: 0.68rem;">
+            <i class="bi bi-check-circle-fill me-1 text-success"></i> Verified Record
+          </span>
+        </div>
+
+        <!-- Official Voter ID Card Viewport (Height: 270px) -->
+        <div class="voter-card-viewport position-relative d-flex flex-column justify-content-between p-3">
+
+          <!-- Official Indian Tricolor Accent Stripe -->
+          <div class="position-absolute top-0 start-0 end-0"
+            style="height: 3.5px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%);">
+          </div>
+
+          <!-- Official Card Header -->
+          <div class="d-flex align-items-center justify-content-between pb-2 border-bottom pt-1">
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ url_for('static', filename='img/eci_official_logo.png') }}" alt="ECI"
+                style="height: 22px; max-width: 130px; object-fit: contain;">
+            </div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 fw-semibold"
+              style="font-size: 0.65rem;">
+              ELECTOR PHOTO IDENTITY CARD
+            </span>
+          </div>
+
+          <!-- Middle Profile Details -->
+          <div class="d-flex align-items-center gap-3 my-auto py-2">
+            <!-- Voter Photo Box with Official Stamp -->
+            <div class="position-relative flex-shrink-0">
+              <img id="voterProfilePhoto" src="" alt="Voter Photo" class="rounded-2 border border-secondary-subtle"
+                style="width: 84px; height: 104px; object-fit: cover; background: #f8fafc;">
+              <span
+                class="position-absolute bottom-0 end-0 translate-middle-y badge rounded-pill bg-success p-1 border border-white"
+                title="Identity Verified">
+                <i class="bi bi-check-lg" style="font-size: 0.65rem;"></i>
+              </span>
+            </div>
+
+            <!-- Voter Credential Details -->
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="mb-1">
+                <span class="badge bg-primary px-2.5 py-1 text-white fw-bold" style="font-size: 0.76rem;">
+                  EPIC: <span id="voterProfileId">--</span>
+                </span>
+              </div>
+              <h5 class="fw-bold text-dark mb-1 text-truncate" id="voterProfileName" style="font-size: 1.12rem;">Voter
+                Name</h5>
+              <div class="text-secondary small mb-1" style="font-size: 0.8rem;">
+                Gender: <strong id="voterProfileGender" class="text-dark">--</strong> • Age: <strong
+                  id="voterProfileAge" class="text-dark">--</strong> Yrs
+              </div>
+              <div class="text-muted small text-truncate" id="voterProfileLocation" style="font-size: 0.74rem;">
+                District, State
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Bottom Official Tag -->
+          <div
+            class="d-flex align-items-center justify-content-between pt-2 border-top bg-light -mx-3 px-3 py-1.5 rounded-bottom"
+            style="font-size: 0.7rem; margin: 0 -1rem -1rem -1rem;">
+            <span class="text-secondary small d-flex align-items-center gap-1">
+              <i class="bi bi-shield-check text-primary"></i> Electoral Roll Record
+            </span>
+            <span class="text-secondary fw-semibold">Official Record</span>
+          </div>
+        </div>
+
+        <!-- Quick 3-Step Verification Guide (Natural, Human Language) -->
+        <div class="kiosk-bottom-panel">
+          <div class="guide-step-item">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>Look at Camera:</strong> Look straight at the camera lens.</div>
+          </div>
+          <div class="guide-step-item">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>Clear View:</strong> Ensure your face is centered and clearly visible.</div>
+          </div>
+          <div class="guide-step-item">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>Verify Match:</strong> Click "Verify Face Match" to unlock your ballot.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: LIVE FACIAL SCANNER CAMERA VIEWPORT -->
+    <div class="col-12 col-lg-6 d-flex flex-column">
+      <div class="kiosk-console-card flex-grow-1">
+        <!-- Card Header -->
+        <div class="kiosk-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle"
+              style="width: 28px; height: 28px;">
+              <i class="bi bi-camera-video-fill" style="font-size: 0.85rem;"></i>
+            </span>
+            <div>
+              <span class="fw-bold small text-dark d-block" style="line-height: 1.2;">Live Camera</span>
+              <span class="text-muted" style="font-size: 0.68rem;">Facial Verification</span>
+            </div>
+          </div>
+          <span
+            class="badge bg-light text-success border border-success-subtle px-3 py-1.5 rounded-pill d-inline-flex align-items-center gap-2"
+            style="font-size: 0.7rem;">
+            <span class="scanner-live-dot"></span>
+            <span class="fw-semibold">Camera Active</span>
+          </span>
+        </div>
+
+        <!-- Camera Viewfinder (Height: 270px) -->
+        <div class="biometric-scanner-box position-relative" id="faceScannerContainer" style="cursor: default;">
+          <video id="kioskVideo" autoplay playsinline muted></video>
+          <canvas id="kioskFaceCanvas"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; transform: scaleX(-1);"></canvas>
+
+          <!-- Clean Biometric Framing Reticle (Matching Step 1) -->
+          <div class="qr-target-reticle" id="faceTargetReticle"
+            style="border-radius: 20px; width: 170px; height: 200px;">
+            <div class="scanner-corner tl"></div>
+            <div class="scanner-corner tr"></div>
+            <div class="scanner-corner bl"></div>
+            <div class="scanner-corner br"></div>
+            <div class="scanner-sweep-line"></div>
+          </div>
+
+          <!-- Invisible Laser beam placeholder to avoid JS reference error if any -->
+          <div class="d-none" id="hudLaser"></div>
+
+          <!-- Scanner Overlays -->
+          <div class="hud-scanner-overlay" id="kioskScannerOverlay" style="pointer-events: none; z-index: 5;">
+            <div class="text-center text-white small px-3 py-1 rounded-pill" id="scanPrompt"
+              style="background: rgba(15, 23, 42, 0.75); font-size: 0.76rem;">
+              Position your face inside frame
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Toolbar (Aligned Bottom Panel) -->
+        <div class="kiosk-bottom-panel">
+          <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+            <button
+              class="btn btn-primary btn-sm px-4 py-2 rounded-pill shadow-sm fw-semibold d-flex align-items-center gap-2"
+              id="btnVerifyFace" type="button">
+              <i class="bi bi-camera-fill me-1"></i>
+              <span>Verify Face Match</span>
+            </button>
+            <div class="d-inline-block position-relative" id="fingerprintWrapper" style="cursor: not-allowed;"
+              title="Fingerprint scanner is not connected on this terminal. Please use Face Match.">
+              <button
+                class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-pill shadow-sm fw-medium d-flex align-items-center gap-2 disabled"
+                id="btnVerifyFingerprint" type="button" disabled
+                style="cursor: not-allowed !important; pointer-events: none; opacity: 0.65;">
+                <i class="bi bi-fingerprint fs-6 me-1"></i>
+                <span>Fingerprint (Unavailable)</span>
+              </button>
+            </div>
+          </div>
+          <div class="text-center text-muted d-flex align-items-center justify-content-center gap-2"
+            style="font-size: 0.72rem;">
+            <i class="bi bi-shield-check text-primary"></i> <span>Biometric verification required to unlock EVM
+              ballot</span>
+          </div>
+          <div class="text-center mt-1">
+            <button type="button"
+              class="btn btn-link btn-sm text-decoration-none text-muted p-0 d-inline-flex align-items-center"
+              id="btnOfficerOverride" style="font-size: 0.68rem; gap: 6px;">
+              <i class="bi bi-shield-lock"></i> <span>Presiding Officer Manual Authentication</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div> <!-- Close sectionStep2 -->
+
+<!-- PRESIDING OFFICER MANUAL OVERRIDE MODAL -->
+<div class="modal fade" id="officerOverrideModal" tabindex="-1" aria-labelledby="officerOverrideModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-content border-0 shadow rounded-4 position-relative overflow-hidden">
+      <!-- Official Indian Tricolor Accent Stripe -->
+      <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%); z-index: 1055;"></div>
+      <div class="modal-header border-bottom pb-3">
+        <div class="d-flex align-items-center gap-2">
+          <div
+            class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center"
+            style="width: 36px; height: 36px;">
+            <i class="bi bi-shield-lock-fill fs-5"></i>
+          </div>
+          <div>
+            <h6 class="modal-title fw-bold text-dark mb-0" id="officerOverrideModalLabel">Presiding Officer Verification
+            </h6>
+            <span class="text-muted" style="font-size: 0.72rem;">Alternative Identity Verification (ECI Rule 49V)</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="small text-secondary mb-3">
+          For voters with biometric match difficulty, facial trauma, or elderly voters, the authorized Election Officer
+          may verify physical identity documents and approve manual ballot access.
+        </p>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-dark">Officer Security PIN</label>
+          <input type="password" class="form-control form-control-sm rounded-3" id="officerOverridePin"
+            placeholder="Enter Polling Officer PIN" autocomplete="off">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-dark">Verification Reason</label>
+          <select class="form-select form-select-sm rounded-3" id="officerOverrideReason">
+            <option value="ECI Rule 49V: Presiding Officer Physical Verification" selected>ECI Rule 49V: Presiding
+              Officer Physical Verification</option>
+            <option value="Physical Handicap / Facial Feature Variation">Physical Handicap / Facial Feature Variation
+            </option>
+            <option value="Elderly Citizen Manual Authentication">Elderly Citizen Manual Authentication</option>
+            <option value="Camera Glare / Optical Sensor Glitch">Camera Glare / Optical Sensor Glitch</option>
+          </select>
+        </div>
+        <div id="officerOverrideError" class="alert alert-danger small py-1.5 px-3 rounded-3 d-none mb-0"></div>
+      </div>
+      <div class="modal-footer border-top pt-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+          data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary rounded-pill px-4" id="btnConfirmOfficerOverride">
+          <i class="bi bi-check2-circle me-1"></i> Approve & Unlock Ballot
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

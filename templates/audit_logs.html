@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Audit & Enrollment Logs — VaultVote{% endblock %}
+{% block page_heading %}Security & Enrollment Audit Logs{% endblock %}
+{% block page_subheading %}
+  <span class="badge bg-secondary">{{ logs|length }} Audit Records</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <div class="vv-card">
+    <div class="vv-card-header">
+      <h5><i class="bi bi-shield-shaded text-primary"></i> Tamper-Evident System Event Stream</h5>
+      <span class="badge bg-light text-dark border">SQLite Table: <code>enrollment_logs</code></span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 font-monospace small">
+        <thead class="table-light text-secondary">
+          <tr>
+            <th>LOG ID</th>
+            <th>TIMESTAMP</th>
+            <th>VOTER ID</th>
+            <th>ACTION</th>
+            <th>EVENT DETAILS</th>
+            <th>IP ADDRESS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if logs %}
+            {% for log in logs %}
+              <tr>
+                <td class="text-muted">#{{ log.id }}</td>
+                <td>{{ log.timestamp }}</td>
+                <td>
+                  <span class="badge bg-dark">{{ log.voter_id }}</span>
+                </td>
+                <td>
+                  <span class="badge {% if 'ENROLLED' in log.action or 'CARD' in log.action or 'QR' in log.action %}bg-success-subtle text-success{% elif 'LOGIN' in log.action %}bg-primary-subtle text-primary{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                    {{ log.action }}
+                  </span>
+                </td>
+                <td class="font-sans-serif" style="max-width: 400px; word-break: break-word;">
+                  {{ log.details }}
+                </td>
+                <td class="text-muted">{{ log.ip_address }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                No logs recorded yet.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — VaultVote{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+{% block page_subheading %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- TOP STATS SUMMARY ROW -->
+  <div class="row g-3 mb-4 align-items-stretch">
+    <!-- 1. Total Voters -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-blue">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ metrics.total_voters }}</div>
+          <div class="vv-stat-label">Total Voters</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Face Registered -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-green">
+          <i class="bi bi-camera-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ metrics.face_registered }}</div>
+          <div class="vv-stat-label">Face Enrolled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Fingerprint Registered -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-purple">
+          <i class="bi bi-fingerprint"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ metrics.fingerprint_registered }}</div>
+          <div class="vv-stat-label">Fingerprint (Sim)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Completed Registrations -->
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-gold">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ metrics.completed }}</div>
+          <div class="vv-stat-label">Completed Cards</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ELECTION BANNER WITH CENTRAL ADMIN ACTIONS -->
+  <div class="card border-0 shadow-sm text-white overflow-hidden position-relative mb-4 vv-dashboard-banner">
+    <!-- Indian Tricolor Accent Stripe -->
+    <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%); z-index: 5;"></div>
+
+    <!-- Soft gradient overlay for crisp text readability -->
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.94) 0%, rgba(15, 23, 42, 0.78) 50%, rgba(15, 23, 42, 0.58) 100%); z-index: 1;"></div>
+    
+    <div class="card-body p-4 p-md-4.5 d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3 position-relative" style="z-index: 2;">
+      <div>
+        <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-15 text-white mb-2" style="font-size: 0.72rem; letter-spacing: 0.06em;">
+          <i class="bi bi-shield-check text-warning"></i>
+          <span class="fw-semibold">CENTRAL ELECTION CONSOLE</span>
+        </div>
+        <h3 class="fw-bold mb-2 text-white" style="letter-spacing: -0.01em;">Electoral Administration & Voting</h3>
+        
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span class="badge bg-black bg-opacity-35 text-white border border-white border-opacity-15 px-3 py-1.5 rounded-pill fw-medium d-inline-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
+            <i class="bi bi-people-fill text-info"></i>
+            <span>Registered: <strong class="text-white">{{ metrics.total_voters }}</strong></span>
+          </span>
+          <span class="badge bg-black bg-opacity-35 text-white border border-white border-opacity-15 px-3 py-1.5 rounded-pill fw-medium d-inline-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
+            <i class="bi bi-box-seam-fill text-warning"></i>
+            <span>Votes Cast: <strong class="text-warning">{{ metrics.total_votes }}</strong></span>
+          </span>
+          <span class="badge bg-black bg-opacity-35 text-white border border-white border-opacity-15 px-3 py-1.5 rounded-pill fw-medium d-inline-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
+            <i class="bi bi-graph-up-arrow text-success"></i>
+            <span>Turnout: <strong class="text-success">{{ metrics.turnout_pct }}%</strong></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="{{ url_for('election_results') }}" class="vv-banner-btn vv-banner-glass-btn d-inline-flex align-items-center gap-2" title="View Live Election Results">
+          <i class="bi bi-bar-chart-fill text-warning fs-6"></i>
+          <span>Live Results</span>
+        </a>
+        <a href="{{ url_for('voting_portal') }}" class="vv-banner-btn vv-banner-glass-btn d-inline-flex align-items-center gap-2" title="Open Citizen Voting Booth">
+          <i class="bi bi-box-seam-fill text-warning fs-6"></i>
+          <span>Voting Booth</span>
+        </a>
+        <a href="{{ url_for('register_voter') }}" class="vv-banner-btn vv-banner-primary-btn d-inline-flex align-items-center gap-2" title="Register New Voter">
+          <i class="bi bi-person-plus-fill fs-6"></i>
+          <span>Register Voter</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE ELECTION RESULTS SUMMARY -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white py-3 px-4 d-flex align-items-center justify-content-between border-bottom">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-fill text-primary fs-5"></i>
+        <h5 class="mb-0 fw-bold text-dark">Live Election Results Tally</h5>
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 rounded-pill ms-2" style="font-size: 0.72rem;">
+          <i class="bi bi-broadcast me-1"></i> Live
+        </span>
+      </div>
+      <a href="{{ url_for('election_results') }}" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1.5">
+        <span>View Full Results</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card-body p-4">
+      <div class="row g-3">
+        {% for cand in metrics.candidates %}
+        {% set share = (cand.votes_count / metrics.total_votes * 100)|round(1) if metrics.total_votes > 0 else 0.0 %}
+        <div class="col-12 col-sm-6 col-lg d-flex">
+          <div class="p-3 rounded-3 border bg-light w-100 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              {% if cand.banner_image %}
+              <img src="{{ url_for('static', filename='img/' ~ cand.banner_image) }}" alt="{{ cand.name }}" class="rounded border" style="width: 48px; height: 28px; object-fit: cover;">
+              {% endif %}
+              <div class="text-truncate">
+                <div class="fw-bold text-dark text-truncate" style="font-size: 0.88rem;">
+                  {% if '(' in cand.name %}{{ cand.name.split('(')[0].strip() }}{% else %}{{ cand.name }}{% endif %}
+                </div>
+                <div class="text-muted text-truncate" style="font-size: 0.74rem;">{{ cand.symbol_name }}</div>
+              </div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between align-items-center small text-secondary mb-1">
+                <span>{{ cand.votes_count }} votes</span>
+                <span class="fw-bold text-dark">{{ share }}%</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ share }}%; background-color: {{ cand.color or '#2563eb' }};" aria-valuenow="{{ share }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT REGISTRATIONS TABLE -->
+  <div class="row g-3">
+    <!-- Recent Enrolled Voters -->
+    <div class="col-12">
+      <div class="vv-card">
+        <div class="vv-card-header">
+          <h5><i class="bi bi-person-lines-fill text-primary"></i> Recent Registrations</h5>
+          <a href="{{ url_for('registered_voters') }}" class="btn btn-outline-primary btn-sm">View All Voters</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-secondary">
+              <tr>
+                <th>Voter ID</th>
+                <th>Name</th>
+                <th>Photo</th>
+                <th>Face</th>
+                <th>Fingerprint</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if metrics.recent_voters %}
+                {% for voter in metrics.recent_voters %}
+                  <tr>
+                    <td>
+                      <span class="fw-bold font-monospace text-primary">{{ voter.voter_id }}</span>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ voter.full_name }}</div>
+                      <small class="text-muted">{{ voter.gender }}, {{ voter.age }} Yrs</small>
+                    </td>
+                    <td>
+                      {% if voter.photo_path %}
+                        <img src="{{ url_for('static', filename=voter.photo_path) }}" alt="Photo" class="rounded-circle border" style="width: 36px; height: 36px; object-fit: cover;">
+                      {% else %}
+                        <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-muted" style="width: 36px; height: 36px;">
+                          <i class="bi bi-person"></i>
+                        </div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if voter.face_status == 'ENROLLED' %}
+                        <span class="badge badge-vv-success"><i class="bi bi-check2"></i> Enrolled</span>
+                      {% else %}
+                        <span class="badge badge-vv-pending"><i class="bi bi-clock"></i> Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if voter.fingerprint_status == 'ENROLLED' %}
+                        <span class="badge badge-vv-success" title="Software Simulated"><i class="bi bi-check2"></i> Enrolled (Sim)</span>
+                      {% else %}
+                        <span class="badge badge-vv-pending"><i class="bi bi-clock"></i> Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if voter.registration_status == 'COMPLETED' %}
+                        <span class="badge bg-success"><i class="bi bi-patch-check"></i> Completed</span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Incomplete</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <div class="d-inline-flex align-items-center gap-1">
+                        {% if voter.registration_status == 'COMPLETED' %}
+                          <a href="{{ url_for('view_voter_card', voter_id=voter.voter_id) }}" class="btn btn-sm btn-outline-primary" title="View Voter ID Card">
+                            <i class="bi bi-card-heading"></i> Card
+                          </a>
+                        {% else %}
+                          <a href="{{ url_for('biometric_enrollment', voter_id=voter.voter_id) }}" class="btn btn-sm btn-primary" title="Complete Biometrics">
+                            <i class="bi bi-fingerprint"></i> Enroll
+                          </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                title="Delete Voter"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteVoterModal"
+                                data-voter-id="{{ voter.voter_id }}"
+                                data-voter-name="{{ voter.full_name }}">
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="7" class="text-center py-4 text-muted">
+                    <i class="bi bi-folder-x fs-2 d-block mb-2"></i>
+                    No voters registered yet. Click "Register Voter" above to start.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="modal fade" id="deleteVoterModal" tabindex="-1" aria-labelledby="deleteVoterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white border-0 py-3">
+          <h5 class="modal-title d-flex align-items-center gap-2" id="deleteVoterModalLabel">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirm Permanent Deletion
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex p-3 rounded-circle bg-danger-subtle text-danger mb-3">
+            <i class="bi bi-person-x-fill fs-1"></i>
+          </div>
+          <h5 class="fw-bold text-dark mb-1" id="modalVoterName">Voter Name</h5>
+          <div class="badge bg-secondary font-monospace fs-6 mb-3" id="modalVoterId">WRM2745001</div>
+          <p class="text-secondary small mb-0">
+            Are you sure you want to permanently delete this voter? This will remove all personal records, face biometrics, fingerprint templates, QR tokens, and generated ID cards.
+            <br><strong class="text-danger">This action cannot be undone.</strong>
+          </p>
+        </div>
+        <div class="modal-footer bg-light border-0 px-4 py-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+          <form id="deleteVoterForm" method="POST" action="" class="m-0">
+            <button type="submit" class="btn btn-danger px-4 d-flex align-items-center gap-2 shadow-sm">
+              <i class="bi bi-trash3-fill"></i> Delete Voter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const deleteModal = document.getElementById('deleteVoterModal');
+      if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          const voterId = button.getAttribute('data-voter-id');
+          const voterName = button.getAttribute('data-voter-name');
+          document.getElementById('modalVoterId').textContent = voterId;
+          document.getElementById('modalVoterName').textContent = voterName;
+          document.getElementById('deleteVoterForm').action = '/voter/delete/' + encodeURIComponent(voterId);
+        });
+      }
+    });
+  </script>
+
+</div>
+{% endblock %}

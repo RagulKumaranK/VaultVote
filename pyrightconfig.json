@@ -1,0 +1,15 @@
+{
+  "include": [
+    "."
+  ],
+  "extraPaths": [
+    ".",
+    ".venv/Lib/site-packages",
+    "C:/Python313/Lib/site-packages"
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportGeneralTypeIssues": false,
+  "reportOptionalMemberAccess": false
+}
+

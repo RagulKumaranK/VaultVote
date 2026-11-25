@@ -1,0 +1,96 @@
+<!-- ================= STEP 0: LEADING / START PAGE ================= -->
+<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 position-relative" id="sectionLeading" style="background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(14px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;">
+
+  <!-- Official Indian Tricolor Accent Stripe -->
+  <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%);"></div>
+
+  <!-- Official Top Banner & Heading -->
+  <div class="text-center pb-4 border-bottom mb-4">
+    <div class="d-flex align-items-center justify-content-center gap-3 mb-3 flex-wrap">
+      <img src="{{ url_for('static', filename='img/vaultvote_logo.png') }}" alt="VaultVote" style="height: 48px; object-fit: contain;">
+      <div class="vr opacity-25 d-none d-sm-block" style="height: 34px;"></div>
+      <img src="{{ url_for('static', filename='img/eci_official_logo.png') }}" alt="Election Commission of India" style="height: 48px; max-width: 240px; object-fit: contain;">
+    </div>
+    
+    <h2 class="fw-bold text-dark mb-2" style="font-size: 1.75rem;">Welcome to VaultVote</h2>
+    <p class="text-muted mb-0" style="max-width: 520px; margin: 0 auto; font-size: 0.95rem; line-height: 1.5;">
+      Follow three simple steps to verify your identity and cast your vote.
+    </p>
+  </div>
+
+  <!-- 3-Step Voting Workflow Preview Cards -->
+  <div class="row g-3 mb-4 text-center">
+    
+    <!-- Step 1 Preview -->
+    <div class="col-12 col-md-4">
+      <div class="p-4 rounded-3 bg-light border h-100 d-flex flex-column align-items-center justify-content-center">
+        <div class="kiosk-badge-icon mb-3">
+          <i class="bi bi-qr-code-scan"></i>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 mb-2 fw-semibold" style="font-size: 0.72rem;">Step 1</span>
+        <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Scan Voter ID</h5>
+        <p class="text-muted small mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+          Scan the QR code on your Voter ID card.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 Preview -->
+    <div class="col-12 col-md-4">
+      <div class="p-4 rounded-3 bg-light border h-100 d-flex flex-column align-items-center justify-content-center">
+        <div class="kiosk-badge-icon mb-3">
+          <i class="bi bi-person-bounding-box"></i>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 mb-2 fw-semibold" style="font-size: 0.72rem;">Step 2</span>
+        <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Face Verification</h5>
+        <p class="text-muted small mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+          Look at the camera to confirm your identity.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 3 Preview -->
+    <div class="col-12 col-md-4">
+      <div class="p-4 rounded-3 bg-light border h-100 d-flex flex-column align-items-center justify-content-center">
+        <div class="kiosk-badge-icon mb-3">
+          <i class="bi bi-check2-square"></i>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 mb-2 fw-semibold" style="font-size: 0.72rem;">Step 3</span>
+        <h5 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">Cast Your Vote</h5>
+        <p class="text-muted small mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+          Select your candidate on the EVM ballot.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Reassurance line (simple, clean, human) -->
+  <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap text-muted small mb-4" style="font-size: 0.88rem;">
+    <span class="d-inline-flex align-items-center" style="gap: 8px;">
+      <i class="bi bi-shield-check text-success fs-5"></i>
+      <span class="fw-medium text-dark">Secure &amp; Verified</span>
+    </span>
+    <span class="text-secondary opacity-50">•</span>
+    <span class="d-inline-flex align-items-center" style="gap: 8px;">
+      <i class="bi bi-lock-fill text-primary fs-5"></i>
+      <span class="fw-medium text-dark">100% Confidential Ballot</span>
+    </span>
+  </div>
+
+  <!-- Prominent Start Voting Button -->
+  <div class="text-center">
+    <button id="btnStartVoting" type="button" 
+      class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow d-inline-flex align-items-center justify-content-center"
+      onclick="startVotingSession()" 
+      style="font-size: 1.15rem; min-width: 250px; gap: 12px; letter-spacing: 0.01em;">
+      <span>Start Voting</span>
+      <i class="bi bi-arrow-right fs-4"></i>
+    </button>
+    <div class="text-muted mt-3 d-flex align-items-center justify-content-center" style="font-size: 0.85rem; gap: 8px;">
+      <i class="bi bi-volume-up-fill text-primary fs-5"></i>
+      <span>Voice guidance is active to help you</span>
+    </div>
+  </div>
+
+</div> <!-- Close sectionLeading -->

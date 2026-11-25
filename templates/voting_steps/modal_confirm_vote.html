@@ -1,0 +1,102 @@
+<!-- ================= CONFIRM BALLOT SELECTION MODAL ================= -->
+<div class="modal fade" id="confirmVoteModal" tabindex="-1" aria-labelledby="confirmVoteModalLabel" aria-hidden="true"
+  data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+    <div class="modal-content border-0 rounded-4 overflow-hidden shadow-lg position-relative"
+      style="background: #ffffff;">
+      <!-- Official Indian Tricolor Accent Stripe -->
+      <div class="position-absolute top-0 start-0 end-0"
+        style="height: 4px; background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%); z-index: 1055;">
+      </div>
+
+      <!-- Official Header -->
+      <div class="modal-header px-4 py-3 border-0 d-flex align-items-center justify-content-between"
+        style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white shadow-sm"
+            style="width: 32px; height: 32px;">
+            <i class="bi bi-shield-lock-fill fs-6"></i>
+          </div>
+          <div>
+            <h6 class="modal-title fw-bold text-white mb-0" id="confirmVoteModalLabel"
+              style="font-size: 1.02rem; letter-spacing: -0.01em;">
+              Confirm Ballot Selection
+            </h6>
+            <div class="text-white-50" style="font-size: 0.72rem;">Review candidate details before final casting</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-4" style="background: #f8fafc;">
+
+        <div class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2 text-center"
+          style="font-size: 0.72rem; letter-spacing: 0.08em;">
+          You are about to cast your vote for
+        </div>
+
+        <!-- Official Candidate Verification Card -->
+        <div class="bg-white rounded-3 border p-3 mb-3 shadow-sm" style="border-color: #cbd5e1 !important;">
+          <div class="d-flex align-items-center gap-3">
+
+            <!-- Serial Number Plate -->
+            <div class="d-flex align-items-center justify-content-center rounded-2 fw-bold" id="modalCandSno"
+              style="width: 48px; height: 50px; background: #f1f5f9; border: 1.5px solid #cbd5e1; font-size: 1.25rem; color: #1e293b; flex-shrink: 0;">
+              01
+            </div>
+
+            <!-- Candidate Symbol Frame -->
+            <div class="rounded-2 p-1 d-flex align-items-center justify-content-center bg-white border"
+              style="width: 62px; height: 62px; border-color: #cbd5e1 !important; flex-shrink: 0;">
+              <img id="modalCandSymbolImg" src="" alt="Symbol"
+                style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            </div>
+
+            <!-- Candidate Identity & Party Details (Wrapped, No Overflow) -->
+            <div class="flex-grow-1" style="min-width: 0;">
+              <h5 class="fw-bold text-dark mb-1" id="modalCandName"
+                style="font-size: 1.05rem; line-height: 1.25; word-break: break-word;">
+                Candidate Name
+              </h5>
+              <div class="text-muted fw-semibold" id="modalCandParty"
+                style="font-size: 0.82rem; line-height: 1.35; word-break: break-word; white-space: normal;">
+                Party Name
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Official Security & Finality Notice -->
+        <div class="p-2.5 rounded-3 border d-flex align-items-center gap-2"
+          style="background-color: #fffbeb; border-color: #fde68a !important; color: #92400e;">
+          <i class="bi bi-info-circle-fill text-warning fs-5 flex-shrink-0"></i>
+          <div style="font-size: 0.78rem; line-height: 1.35;">
+            <strong>Notice:</strong> Once confirmed, your vote is recorded and cannot be changed.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer Action Buttons -->
+      <div class="modal-footer bg-white border-top px-4 py-3 d-flex align-items-center justify-content-between"
+        style="border-color: #e2e8f0 !important;">
+        <button type="button"
+          class="btn btn-outline-secondary px-3 py-2 fw-semibold rounded-3 d-flex align-items-center gap-2"
+          data-bs-dismiss="modal" style="font-size: 0.88rem;">
+          <i class="bi bi-arrow-left"></i>
+          <span>Change Selection</span>
+        </button>
+        <button type="button"
+          class="btn btn-success px-4 py-2 fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2"
+          id="btnConfirmCastVote"
+          style="font-size: 0.92rem; background: linear-gradient(180deg, #16a34a 0%, #15803d 100%); border-color: #15803d;">
+          <i class="bi bi-check2-circle fs-5"></i>
+          <span>Confirm &amp; Cast Vote</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

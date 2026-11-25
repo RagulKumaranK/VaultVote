@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Duplicate Record Found — VaultVote{% endblock %}
+{% block page_heading %}Duplicate Record Found{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 800px;">
+
+  <div class="card border-warning shadow-sm mb-4">
+    <div class="card-header bg-warning-subtle text-warning-emphasis py-3 d-flex align-items-center gap-2 border-bottom border-warning-subtle">
+      <i class="bi bi-exclamation-triangle-fill fs-5 text-warning"></i>
+      <h5 class="mb-0 fw-bold">Existing Voter Record Detected</h5>
+    </div>
+
+    <div class="card-body p-4">
+      <div class="alert alert-light border d-flex align-items-center mb-4">
+        <i class="bi bi-info-circle-fill fs-4 me-3 text-primary"></i>
+        <div>
+          An existing voter record with matching identity details was found in the database.
+          Duplicate registrations cannot be submitted.
+        </div>
+      </div>
+
+      <div class="p-3 bg-light rounded-3 border mb-4">
+        <div class="row g-2 small">
+          <div class="col-sm-4 text-muted fw-semibold">Matched By:</div>
+          <div class="col-sm-8 text-danger fw-bold">{{ reason }} ({{ duplicate_val }})</div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Existing Voter ID:</div>
+          <div class="col-sm-8">
+            <span class="badge bg-dark font-monospace fs-6 px-2.5 py-1">{{ existing_voter.voter_id }}</span>
+          </div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Voter Name:</div>
+          <div class="col-sm-8 fw-semibold text-dark">{{ existing_voter.full_name }}</div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Date of Birth:</div>
+          <div class="col-sm-8 text-dark">{{ existing_voter.dob }}</div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Aadhaar Number:</div>
+          <div class="col-sm-8 font-monospace text-secondary">{{ existing_voter.aadhaar_masked }}</div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Status:</div>
+          <div class="col-sm-8">
+            <span class="badge {% if existing_voter.registration_status == 'COMPLETED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+              {{ existing_voter.registration_status }}
+            </span>
+          </div>
+
+          <div class="col-sm-4 text-muted fw-semibold">Registered On:</div>
+          <div class="col-sm-8 text-muted">{{ existing_voter.created_at }}</div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <a href="{{ url_for('register_voter') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i> Back to Form
+        </a>
+        <div class="d-flex gap-2">
+          {% if existing_voter.registration_status == 'COMPLETED' %}
+            <a href="{{ url_for('view_voter_card', voter_id=existing_voter.voter_id) }}" class="btn btn-primary">
+              <i class="bi bi-card-heading me-1"></i> View Existing Voter Card
+            </a>
+          {% else %}
+            <a href="{{ url_for('biometric_enrollment', voter_id=existing_voter.voter_id) }}" class="btn btn-warning text-dark fw-semibold">
+              <i class="bi bi-fingerprint me-1"></i> Complete Biometrics
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

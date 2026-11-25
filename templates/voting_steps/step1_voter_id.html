@@ -1,0 +1,182 @@
+<!-- ================= STEP 1: VOTER IDENTIFICATION ================= -->
+<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 d-none position-relative" id="sectionStep1">
+
+  <!-- Header & Mode Switcher Row -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-3 mb-3 gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="kiosk-badge-icon">
+        <i class="bi bi-qr-code-scan"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h4 class="fw-bold text-dark mb-0">Scan Voter ID QR Code</h4>
+          <span
+            class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fw-semibold"
+            style="font-size: 0.72rem;">Step 1</span>
+        </div>
+        <div class="text-secondary small">Align your Voter ID QR code with the camera</div>
+      </div>
+    </div>
+
+    <!-- Mode Switcher Segmented Control -->
+    <div class="kiosk-seg-control shadow-sm">
+      <button class="kiosk-seg-btn active" id="btnModeQr" type="button" onclick="switchAuthMode('qr')">
+        <i class="bi bi-camera-fill"></i>
+        <span>QR Scanner</span>
+      </button>
+      <button class="kiosk-seg-btn" id="btnModeManual" type="button" onclick="switchAuthMode('manual')">
+        <i class="bi bi-keyboard-fill"></i>
+        <span>Manual Input</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- OPTION 1: LIVE OPTICAL SCANNER (2-COLUMN BALANCED SPLIT) -->
+  <div id="authModeQr">
+    <div class="row g-4 align-items-stretch">
+
+      <!-- LEFT COLUMN: VIDEO DEMO & SCANNING INSTRUCTIONS -->
+      <div class="col-12 col-lg-6 d-flex flex-column">
+        <div class="kiosk-console-card flex-grow-1">
+          <!-- Card Header -->
+          <div class="kiosk-card-header">
+            <span class="fw-semibold small text-dark d-flex align-items-center gap-2">
+              <i class="bi bi-play-circle-fill text-primary fs-5"></i>
+              <span>How to Scan</span>
+            </span>
+            <span class="badge bg-light text-secondary border border-secondary-subtle px-2.5 py-1 rounded-pill"
+              style="font-size: 0.7rem;">
+              Quick Guide
+            </span>
+          </div>
+
+          <!-- Tutorial Video Element (Height: 270px) -->
+          <div class="tutorial-video-wrapper">
+            <video autoplay loop muted playsinline>
+              <source src="{{ url_for('static', filename='video/qrscanvideo.mp4') }}" type="video/mp4">
+              Your browser does not support HTML5 video.
+            </video>
+            <div class="position-absolute bottom-0 start-0 end-0 p-1.5 text-center text-white small"
+              style="background: rgba(15, 23, 42, 0.75); font-size: 0.72rem; z-index: 2;">
+              <i class="bi bi-arrows-expand me-1 text-light"></i> Hold steady ~1 foot away
+            </div>
+          </div>
+
+          <!-- Quick 3-Step Scan Instructions (Aligned Bottom Panel) -->
+          <div class="kiosk-bottom-panel">
+            <div class="guide-step-item">
+              <div class="guide-step-num">1</div>
+              <div class="guide-step-text"><strong>Hold Card Steady:</strong> Hold your Voter ID card in front of the camera.</div>
+            </div>
+            <div class="guide-step-item">
+              <div class="guide-step-num">2</div>
+              <div class="guide-step-text"><strong>Center the QR Code:</strong> Keep the QR code inside the white frame.</div>
+            </div>
+            <div class="guide-step-item">
+              <div class="guide-step-num">3</div>
+              <div class="guide-step-text"><strong>Automatic Scan:</strong> The camera scans and moves to Step 2 automatically.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: LIVE SCANNER CAMERA VIEWPORT -->
+      <div class="col-12 col-lg-6 d-flex flex-column">
+        <div class="kiosk-console-card flex-grow-1">
+          <!-- Card Header -->
+          <div class="kiosk-card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span
+                class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle"
+                style="width: 30px; height: 30px;">
+                <i class="bi bi-camera-video-fill" style="font-size: 0.9rem;"></i>
+              </span>
+              <span class="fw-bold small text-dark">Live Camera Viewfinder</span>
+            </div>
+            <span id="qrCameraStatusBadge"
+              class="badge bg-light text-success border border-success-subtle px-3 py-1.5 rounded-pill d-inline-flex align-items-center"
+              style="font-size: 0.72rem;">
+              <span class="scanner-live-dot me-2" id="qrStatusDot" style="margin-right: 6px;"></span>
+              <span class="fw-semibold" id="qrStatusBadge">Camera Active</span>
+            </span>
+          </div>
+
+          <!-- Camera Viewfinder (Height: 270px) -->
+          <div class="qr-scanner-box position-relative" id="qrScannerContainer" onclick="handleScannerBoxClick()">
+            <video id="qrScannerVideo" autoplay playsinline muted></video>
+
+            <!-- Target Alignment Reticle with Clean Corner Guides & Sweep Line (Strictly Centered) -->
+            <div class="qr-target-reticle" id="qrTargetReticle">
+              <div class="scanner-corner tl"></div>
+              <div class="scanner-corner tr"></div>
+              <div class="scanner-corner bl"></div>
+              <div class="scanner-corner br"></div>
+              <div class="scanner-sweep-line"></div>
+            </div>
+
+            <!-- Top Status Indicator (Explicit Spacing & Margin) -->
+            <div class="scanner-top-badge" style="gap: 10px !important; padding: 6px 14px !important;">
+              <i class="bi bi-qr-code text-info me-2" style="font-size: 0.85rem; margin-right: 8px !important;"></i>
+              <span style="letter-spacing: 0.05em;">AUTO-SCAN ACTIVE</span>
+            </div>
+
+            <!-- Scanner Overlays -->
+            <div class="hud-scanner-overlay" style="pointer-events: none; z-index: 3;">
+              <div class="scanner-guide-pill" id="qrPromptText"
+                style="gap: 10px !important; padding: 7px 18px !important;">
+                <i class="bi bi-aspect-ratio text-info me-2"
+                  style="font-size: 0.9rem; margin-right: 8px !important;"></i>
+                <span>Hold Voter ID QR inside frame</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls Toolbar (Aligned Bottom Panel) -->
+          <div class="kiosk-bottom-panel">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+              <button type="button"
+                class="btn btn-outline-primary btn-sm rounded-pill shadow-xs fw-semibold d-inline-flex align-items-center"
+                style="padding: 6px 16px;" onclick="startQrScanner()">
+                <i class="bi bi-arrow-clockwise me-2" style="margin-right: 8px !important;"></i>
+                <span>Restart Camera</span>
+              </button>
+              <button type="button"
+                class="btn btn-outline-secondary btn-sm rounded-pill shadow-xs fw-semibold d-inline-flex align-items-center"
+                style="padding: 6px 16px;" onclick="document.getElementById('qrFileInput').click()">
+                <i class="bi bi-upload me-2" style="margin-right: 8px !important;"></i>
+                <span>Upload QR File</span>
+              </button>
+              <input type="file" id="qrFileInput" accept="image/*" class="d-none" onchange="handleQrFileUpload(event)">
+            </div>
+            <div class="text-center text-muted d-flex align-items-center justify-content-center"
+              style="font-size: 0.74rem;">
+              <i class="bi bi-shield-check text-primary me-2" style="margin-right: 6px !important;"></i>
+              <span>VaultVote QR Scanner</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- OPTION 2: MANUAL EPIC NUMBER ENTRY (SWITCHABLE) -->
+  <div id="authModeManual" class="row justify-content-center d-none my-4">
+    <div class="col-12 col-md-8 text-center">
+      <div class="p-4 bg-light rounded-4 border shadow-sm">
+        <i class="bi bi-keyboard text-primary fs-1 mb-2 d-block"></i>
+        <h5 class="fw-bold text-dark mb-1">Enter Voter EPIC Number</h5>
+        <p class="text-muted small mb-3">Type your 10-character official Electors Photo Identity Card number.</p>
+        <div class="input-group input-group-lg mb-2 shadow-sm">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-primary"></i></span>
+          <input type="text" id="voterInput" class="form-control text-uppercase font-monospace fw-bold"
+            placeholder="e.g. WRM2745017" autofocus>
+          <button class="btn btn-primary px-4 fw-semibold" id="btnVerifyVoter" type="button">
+            Verify Voter <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- Close sectionStep1 -->

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Register Voter — VaultVote{% endblock %}
+{% block page_heading %}Register Voter{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 920px;">
+
+  <!-- MODERN 3-STEP PROGRESS STEPPER -->
+  <div class="vv-stepper">
+    <div class="vv-step-item active">
+      <div class="vv-step-num"><i class="bi bi-person-fill"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title">1. Voter Details</div>
+        <div class="vv-step-desc">Personal & Contact Info</div>
+      </div>
+    </div>
+    <div class="vv-step-item">
+      <div class="vv-step-num"><i class="bi bi-camera-fill"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title">2. Biometrics</div>
+        <div class="vv-step-desc">Face Photo & Fingerprint</div>
+      </div>
+    </div>
+    <div class="vv-step-item">
+      <div class="vv-step-num"><i class="bi bi-card-heading"></i></div>
+      <div class="vv-step-text">
+        <div class="vv-step-title">3. Voter ID Card</div>
+        <div class="vv-step-desc">QR Token & PVC Card</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time Duplicate Warning Banner Container -->
+  <div id="duplicate-alert-banner" class="mb-4" style="display: none;"></div>
+
+  <!-- REGISTRATION FORM CARD (WITH TRICOLOR ACCENT) -->
+  <div class="vv-card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+    
+    <!-- CARD HEADER -->
+    <div class="vv-card-header bg-white border-bottom p-3.5 px-4 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center shadow-xs"
+          style="width: 48px; height: 48px; font-size: 1.35rem; flex-shrink: 0;">
+          <i class="bi bi-person-vcard-fill"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0.5 text-dark" style="letter-spacing: -0.01em;">New Voter Registration</h5>
+          <small class="text-secondary">Fill in official applicant credentials to initiate biometric verification.</small>
+        </div>
+      </div>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-pill fw-bold d-inline-flex align-items-center gap-1.5"
+        style="font-size: 0.78rem;">
+        <span class="d-inline-block rounded-circle bg-primary" style="width: 6px; height: 6px;"></span>
+        Step 1 of 3
+      </span>
+    </div>
+
+    <div class="vv-card-body p-4 p-md-4.5">
+      <!-- Auto-Saved Draft Restored Banner -->
+      <div id="draft-restored-container" class="mb-3" style="display: none;"></div>
+
+      <form method="POST" action="{{ url_for('register_voter') }}" id="voter-form" novalidate>
+
+        <!-- SECTION 1: PERSONAL INFORMATION -->
+        <div class="vv-form-section mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 28px; height: 28px; font-size: 0.85rem;">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <span class="fw-bold text-uppercase text-secondary" style="font-size: 0.78rem; letter-spacing: 0.08em;">Personal Information</span>
+          </div>
+
+          <!-- ROW 1: FULL NAME & FATHER'S NAME -->
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <label for="full_name" class="form-label fw-semibold text-dark mb-1.5">
+                Full Name <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-person text-muted"></i></span>
+                <input type="text" class="form-control" id="full_name" name="full_name"
+                  value="{{ form.get('full_name', '') }}" required placeholder="e.g. Rahul Sharma" autocomplete="name">
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="father_name" class="form-label fw-semibold text-dark mb-1.5">
+                Father / Guardian Name <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-people text-muted"></i></span>
+                <input type="text" class="form-control" id="father_name" name="father_name"
+                  value="{{ form.get('father_name', '') }}" required placeholder="e.g. Ramesh Sharma">
+              </div>
+            </div>
+          </div>
+
+          <!-- ROW 2: DOB, AGE, GENDER (PERFECTLY BALANCED & ALIGNED) -->
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label for="dob" class="form-label fw-semibold text-dark mb-1.5">
+                Date of Birth <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-calendar-event text-muted"></i></span>
+                <input type="date" class="form-control" id="dob" name="dob" value="{{ form.get('dob', '') }}" required
+                  max="2008-11-19">
+              </div>
+              <div class="form-text small text-muted mt-1"><i class="bi bi-info-circle me-1"></i>Eligible age: 18 years or older.</div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="age" class="form-label fw-semibold text-dark mb-1.5">
+                Calculated Age
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-hourglass-split text-muted"></i></span>
+                <input type="text" class="form-control bg-light fw-bold text-dark font-monospace" id="age" name="age"
+                  value="{{ form.get('age', '') }}" readonly placeholder="Auto-calculated">
+                <span class="input-group-text bg-light text-muted small">Years</span>
+              </div>
+              <div id="age-feedback" class="form-text small text-muted mt-1">Computed from birth date.</div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="gender" class="form-label fw-semibold text-dark mb-1.5">
+                Gender <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-gender-ambiguous text-muted"></i></span>
+                <select class="form-select" id="gender" name="gender" required>
+                  <option value="" disabled {% if not form.get('gender') %}selected{% endif %}>Select Gender</option>
+                  <option value="Male" {% if form.get('gender')=='Male' %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if form.get('gender')=='Female' %}selected{% endif %}>Female</option>
+                  <option value="Other" {% if form.get('gender')=='Other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+              <div class="form-text small text-muted mt-1">Applicant legal gender.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: IDENTITY & CONTACT -->
+        <div class="vv-form-section mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 28px; height: 28px; font-size: 0.85rem;">
+              <i class="bi bi-shield-check"></i>
+            </span>
+            <span class="fw-bold text-uppercase text-secondary" style="font-size: 0.78rem; letter-spacing: 0.08em;">Identity & Contact Details</span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label for="aadhaar" class="form-label fw-semibold text-dark mb-1.5">
+                Aadhaar Number (12 Digits) <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-card-heading text-muted"></i></span>
+                <input type="text" class="form-control font-monospace" id="aadhaar" name="aadhaar"
+                  value="{{ form.get('aadhaar', '') }}" maxlength="12" required placeholder="e.g. 556677889900"
+                  style="letter-spacing: 1.5px; font-weight: 600;">
+              </div>
+              <div class="form-text small text-muted mt-1 d-flex align-items-center gap-1">
+                <i class="bi bi-shield-lock-fill text-success"></i>
+                <span>Checked in real-time to prevent duplicate registrations.</span>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label for="mobile" class="form-label fw-semibold text-dark mb-1.5">
+                Mobile Number (10 Digits) <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light fw-bold text-secondary" style="font-size: 0.88rem;">
+                  <span class="me-1">🇮🇳</span> +91
+                </span>
+                <input type="tel" class="form-control font-monospace" id="mobile" name="mobile" value="{{ form.get('mobile', '') }}"
+                  maxlength="10" required placeholder="9876543210" style="letter-spacing: 1px; font-weight: 600;">
+              </div>
+              <div class="form-text small text-muted mt-1 d-flex align-items-center gap-1">
+                <i class="bi bi-bell-fill text-primary"></i>
+                <span>10-digit number for official alerts & verification OTPs.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: RESIDENTIAL ADDRESS -->
+        <div class="vv-form-section mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 28px; height: 28px; font-size: 0.85rem;">
+              <i class="bi bi-geo-alt-fill"></i>
+            </span>
+            <span class="fw-bold text-uppercase text-secondary" style="font-size: 0.78rem; letter-spacing: 0.08em;">Residential Address</span>
+          </div>
+
+          <div class="mb-3">
+            <label for="address" class="form-label fw-semibold text-dark mb-1.5">
+              Street Address <span class="text-danger fw-bold">*</span>
+            </label>
+            <textarea class="form-control" id="address" name="address" rows="2" required
+              placeholder="House / Flat No., Building Name, Street, Area">{{ form.get('address', '') }}</textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label for="district" class="form-label fw-semibold text-dark mb-1.5">
+                District <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-buildings text-muted"></i></span>
+                <input type="text" class="form-control" id="district" name="district"
+                  value="{{ form.get('district', '') }}" required placeholder="e.g. Ramanathapuram"
+                  list="district-suggestions" autocomplete="off">
+                <datalist id="district-suggestions"></datalist>
+              </div>
+              <div class="form-text small text-muted mt-1">Type district to auto-fill state & PIN.</div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="state" class="form-label fw-semibold text-dark mb-1.5">
+                State <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-geo text-muted"></i></span>
+                <input type="text" class="form-control" id="state" name="state" value="{{ form.get('state', '') }}"
+                  required placeholder="e.g. Tamil Nadu">
+              </div>
+              <div class="form-text small text-muted mt-1">Auto-detected from district.</div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="pincode" class="form-label fw-semibold text-dark mb-1.5">
+                PIN Code <span class="text-danger fw-bold">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-pin-map text-muted"></i></span>
+                <input type="text" class="form-control font-monospace" id="pincode" name="pincode"
+                  value="{{ form.get('pincode', '') }}" maxlength="6" required placeholder="e.g. 623501" style="font-weight: 600;">
+              </div>
+              <div class="form-text small text-muted mt-1">Auto-suggested PIN code.</div>
+            </div>
+          </div>
+          <div id="location-autofill-banner" class="mt-2" style="display: none;"></div>
+        </div>
+
+        <!-- DECLARATION -->
+        <div class="p-3 bg-light rounded-3 border mb-4 d-flex align-items-start gap-3" style="background-color: #f8fafc; border-color: #e2e8f0;">
+          <div class="form-check mt-1">
+            <input class="form-check-input" type="checkbox" id="consent" checked required style="cursor: pointer; width: 1.15rem; height: 1.15rem;">
+          </div>
+          <label class="form-check-label small text-secondary mb-0" for="consent" style="cursor: pointer; line-height: 1.5;">
+            <strong class="text-dark d-block mb-0.5">Official ECI Voter Enrollment Declaration</strong>
+            I confirm that the applicant's credentials provided above have been verified against original identification proofs. Information is securely validated in real-time to prevent duplicate voter registrations.
+          </label>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary px-4 py-2.5 d-inline-flex align-items-center gap-2" style="border-radius: 10px;">
+            <i class="bi bi-arrow-left"></i>
+            <span>Cancel</span>
+          </a>
+          <button type="submit" class="btn btn-primary px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-sm" style="border-radius: 10px; font-weight: 700;">
+            <span>Proceed to Biometrics</span>
+            <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
