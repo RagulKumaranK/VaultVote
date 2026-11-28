@@ -1716,39 +1716,39 @@ function showStep4Confirmation(receipt) {
   const smsBox = document.getElementById('vvpatSmsStatusBox');
   if (smsBox) {
     const sms = receipt.sms;
-    if (sms) {
-      smsBox.classList.remove('d-none', 'bg-success-subtle', 'border-success-subtle', 'bg-primary-subtle', 'border-primary-subtle', 'bg-warning-subtle', 'border-warning-subtle');
-      const iconEl = document.getElementById('vvpatSmsIcon');
-      const titleEl = document.getElementById('vvpatSmsTitle');
-      const badgeEl = document.getElementById('vvpatSmsBadge');
-      const phoneEl = document.getElementById('vvpatSmsPhone');
-      const refEl = document.getElementById('vvpatSmsRef');
-      const msgEl = document.getElementById('vvpatSmsMessage');
+    const iconEl = document.getElementById('vvpatSmsIcon');
+    const titleEl = document.getElementById('vvpatSmsTitle');
+    const badgeEl = document.getElementById('vvpatSmsBadge');
+    const phoneEl = document.getElementById('vvpatSmsPhone');
+    const refEl = document.getElementById('vvpatSmsRef');
+    const msgEl = document.getElementById('vvpatSmsMessage');
 
+    if (sms) {
+      smsBox.classList.remove('d-none');
       if (sms.delivered_live) {
-        smsBox.classList.add('bg-success-subtle', 'border-success-subtle');
         if (iconEl) iconEl.className = 'bi bi-chat-square-check-fill text-success';
-        if (titleEl) titleEl.textContent = 'SMS Sent to Registered Phone';
+        if (titleEl) titleEl.textContent = 'Phone SMS Sent';
         if (badgeEl) {
-          badgeEl.className = 'badge rounded-pill bg-success text-white';
+          badgeEl.className = 'badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill';
           badgeEl.textContent = `SENT (${sms.provider || 'SMS'})`;
         }
+        if (msgEl) msgEl.style.setProperty('border-left', '4px solid #16a34a', 'important');
       } else if (sms.simulated) {
-        smsBox.classList.add('bg-primary-subtle', 'border-primary-subtle');
         if (iconEl) iconEl.className = 'bi bi-chat-dots-fill text-primary';
-        if (titleEl) titleEl.textContent = 'Phone Message Queued (Demo Mode)';
+        if (titleEl) titleEl.textContent = 'Phone Message Logged (Demo)';
         if (badgeEl) {
-          badgeEl.className = 'badge rounded-pill bg-primary text-white';
+          badgeEl.className = 'badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill';
           badgeEl.textContent = 'SIMULATED';
         }
+        if (msgEl) msgEl.style.setProperty('border-left', '4px solid #2563eb', 'important');
       } else {
-        smsBox.classList.add('bg-warning-subtle', 'border-warning-subtle');
         if (iconEl) iconEl.className = 'bi bi-exclamation-circle-fill text-warning';
         if (titleEl) titleEl.textContent = 'SMS Delivery Pending';
         if (badgeEl) {
-          badgeEl.className = 'badge rounded-pill bg-warning text-dark';
+          badgeEl.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill';
           badgeEl.textContent = sms.status || 'PENDING';
         }
+        if (msgEl) msgEl.style.setProperty('border-left', '4px solid #f59e0b', 'important');
       }
 
       if (phoneEl) phoneEl.textContent = sms.masked_phone || receipt.masked_mobile || '--';
@@ -1759,7 +1759,14 @@ function showStep4Confirmation(receipt) {
           : (sms.message_preview || 'Vote confirmation dispatched to your registered mobile number.');
       }
     } else {
-      smsBox.classList.add('d-none');
+      if (titleEl) titleEl.textContent = 'Phone SMS Confirmation';
+      if (badgeEl) {
+        badgeEl.className = 'badge bg-light text-secondary border px-2.5 py-1 rounded-pill';
+        badgeEl.textContent = 'N/A';
+      }
+      if (phoneEl) phoneEl.textContent = '--';
+      if (refEl) refEl.textContent = '--';
+      if (msgEl) msgEl.textContent = 'No SMS confirmation metadata available for this session.';
     }
   }
 }

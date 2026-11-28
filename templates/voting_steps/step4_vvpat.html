@@ -1,49 +1,144 @@
-<!-- ================= STEP 4: VVPAT CONFIRMATION ================= -->
-<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 text-center d-none position-relative" id="sectionStep4">
-  <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-3">
-    <i class="bi bi-check-circle-fill fs-1"></i>
-  </div>
-  <h3 class="fw-bold text-success mb-1">Vote Successfully Cast!</h3>
-  <p class="text-muted small mb-4">Your vote has been securely recorded.</p>
+<!-- ================= STEP 4: VVPAT & PHONE SMS CONFIRMATION ================= -->
+<div class="card step-header-card border-0 rounded-4 p-4 p-md-5 d-none position-relative" id="sectionStep4">
 
-  <!-- Digital VVPAT Printed Slip Window -->
-  <div class="vvpat-slip text-start mb-3">
-    <div class="text-center border-bottom pb-2 mb-3">
-      <div class="fw-bold" style="font-size: 0.85rem;">VVPAT AUDIT SLIP</div>
-      <div class="text-muted" style="font-size: 0.7rem;">Election Commission of India</div>
-    </div>
-    <div class="small mb-1"><span class="text-muted">Voter ID:</span> <strong id="vvpatVoterId">--</strong></div>
-    <div class="small mb-1"><span class="text-muted">Candidate:</span> <strong id="vvpatCandidateName">--</strong></div>
-    <div class="small mb-1"><span class="text-muted">Party:</span> <span id="vvpatCandidateParty">--</span></div>
-    <div class="small mb-2"><span class="text-muted">Symbol:</span> <strong id="vvpatCandidateSymbol">--</strong></div>
-    <div class="small text-muted pt-2 border-top" style="font-size: 0.72rem;">
-      Timestamp: <span id="vvpatTimestamp">--</span>
-    </div>
-  </div>
-
-  <!-- Registered Mobile Phone SMS Confirmation Banner -->
-  <div id="vvpatSmsStatusBox" class="rounded-3 border p-3 text-start mb-4 mx-auto d-none" style="max-width: 440px;">
-    <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
-      <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 0.85rem;">
-        <i id="vvpatSmsIcon" class="bi bi-chat-dots-fill"></i>
-        <span id="vvpatSmsTitle">Phone Confirmation SMS</span>
+  <!-- Header & Official Confirmation Row (Unified with Steps 1 & 2) -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-3 mb-4 gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="kiosk-badge-icon bg-success-subtle text-success border border-success-subtle">
+        <i class="bi bi-patch-check-fill"></i>
       </div>
-      <span id="vvpatSmsBadge" class="badge rounded-pill" style="font-size: 0.7rem;">--</span>
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h4 class="fw-bold text-success mb-0">Vote Successfully Cast!</h4>
+          <span
+            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-semibold"
+            style="font-size: 0.72rem;">Step 4</span>
+        </div>
+        <div class="text-secondary small">Your ballot is recorded atomically and your VVPAT &amp; SMS receipt are ready below</div>
+      </div>
     </div>
-    <div class="small mb-1">
-      <span class="text-muted">Recipient:</span>
-      <strong id="vvpatSmsPhone" class="font-monospace">--</strong>
-      <span class="text-muted ms-2">Ref:</span>
-      <code id="vvpatSmsRef" class="small">--</code>
-    </div>
-    <div id="vvpatSmsMessage" class="small text-secondary bg-white bg-opacity-75 rounded-2 p-2 border mt-2" style="font-size: 0.76rem; line-height: 1.4;">
-      --
+
+    <div class="d-flex align-items-center gap-2">
+      <span
+        class="badge bg-light text-secondary border border-secondary-subtle px-3 py-1.5 rounded-pill d-inline-flex align-items-center gap-2"
+        style="font-size: 0.72rem;">
+        <i class="bi bi-shield-lock-fill text-success"></i>
+        <span class="fw-semibold">ECI VVPAT &amp; SMS Receipt</span>
+      </span>
     </div>
   </div>
 
-  <div class="d-flex justify-content-center gap-2">
-    <button type="button" class="btn btn-primary px-4 py-2.5 fw-semibold" onclick="resetKiosk()">
-      <i class="bi bi-arrow-repeat me-1"></i> Next Voter
+  <!-- 2-COLUMN BALANCED SPLIT (MATCHING STEPS 1 & 2) -->
+  <div class="row g-4 align-items-stretch mb-4">
+
+    <!-- LEFT COLUMN: DIGITAL VVPAT PRINTED AUDIT SLIP -->
+    <div class="col-12 col-lg-6 d-flex flex-column">
+      <div class="kiosk-console-card flex-grow-1 h-100">
+        <div class="kiosk-card-header">
+          <span class="fw-semibold small text-dark d-flex align-items-center gap-2">
+            <i class="bi bi-receipt-cutoff text-primary fs-5"></i>
+            <span>Digital VVPAT Audit Slip</span>
+          </span>
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill"
+            style="font-size: 0.68rem;">
+            <i class="bi bi-check-circle-fill me-1"></i> Recorded
+          </span>
+        </div>
+
+        <div class="p-3 p-md-4 d-flex flex-column justify-content-center flex-grow-1" style="background: #f8fafc;">
+          <div class="vvpat-slip text-start">
+            <div class="text-center border-bottom pb-2 mb-3">
+              <div class="fw-bold text-dark" style="font-size: 0.88rem; letter-spacing: 0.04em;">VVPAT AUDIT SLIP</div>
+              <div class="text-muted" style="font-size: 0.72rem;">Election Commission of India</div>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+              <span class="text-muted">Voter ID:</span>
+              <strong id="vvpatVoterId" class="font-monospace text-dark">--</strong>
+            </div>
+            <div class="d-flex justify-content-between small mb-2 gap-2">
+              <span class="text-muted text-nowrap">Candidate:</span>
+              <strong id="vvpatCandidateName" class="text-end text-dark">--</strong>
+            </div>
+            <div class="d-flex justify-content-between small mb-2 gap-2">
+              <span class="text-muted text-nowrap">Party:</span>
+              <span id="vvpatCandidateParty" class="text-end text-secondary">--</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+              <span class="text-muted">Symbol:</span>
+              <strong id="vvpatCandidateSymbol" class="text-dark">--</strong>
+            </div>
+            <div class="small text-muted pt-2 mt-2 border-top d-flex justify-content-between" style="font-size: 0.72rem;">
+              <span>Timestamp:</span>
+              <span id="vvpatTimestamp" class="font-monospace">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: PHONE SMS CONFIRMATION CARD -->
+    <div class="col-12 col-lg-6 d-flex flex-column">
+      <div class="kiosk-console-card flex-grow-1 h-100" id="vvpatSmsStatusBox">
+        <div class="kiosk-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle"
+              style="width: 30px; height: 30px;">
+              <i id="vvpatSmsIcon" class="bi bi-chat-dots-fill" style="font-size: 0.9rem;"></i>
+            </span>
+            <span id="vvpatSmsTitle" class="fw-bold small text-dark">Phone SMS Confirmation</span>
+          </div>
+          <span id="vvpatSmsBadge" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill"
+            style="font-size: 0.7rem;">
+            --
+          </span>
+        </div>
+
+        <div class="p-3 p-md-4 d-flex flex-column justify-content-between flex-grow-1" style="background: #f8fafc;">
+          <div>
+            <!-- Recipient & Reference Metadata Strip -->
+            <div class="bg-white rounded-3 border p-3 mb-3 shadow-xs">
+              <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                <span class="small text-muted d-flex align-items-center gap-1.5">
+                  <i class="bi bi-phone-fill text-primary"></i>
+                  <span>Registered Phone</span>
+                </span>
+                <strong id="vvpatSmsPhone" class="font-monospace text-dark small">--</strong>
+              </div>
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="small text-muted d-flex align-items-center gap-1.5">
+                  <i class="bi bi-hash text-secondary"></i>
+                  <span>Receipt Ref</span>
+                </span>
+                <code id="vvpatSmsRef" class="small fw-semibold">--</code>
+              </div>
+            </div>
+
+            <!-- SMS Message Bubble Preview -->
+            <div class="small text-secondary fw-semibold mb-1.5 d-flex align-items-center gap-1.5" style="font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase;">
+              <i class="bi bi-chat-left-text-fill text-primary"></i>
+              <span>Dispatched Message Preview</span>
+            </div>
+            <div id="vvpatSmsMessage" class="p-3 rounded-3 bg-white border text-dark small shadow-xs"
+              style="font-size: 0.82rem; line-height: 1.5; border-left: 4px solid #2563eb !important;">
+              --
+            </div>
+          </div>
+
+          <div class="mt-3 pt-2 border-top d-flex align-items-center gap-2 text-muted" style="font-size: 0.74rem;">
+            <i class="bi bi-shield-check text-success flex-shrink-0 fs-6"></i>
+            <span>Ballot secrecy preserved: candidate selection is never included in SMS alerts.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER ACTION -->
+  <div class="d-flex justify-content-center pt-2 border-top">
+    <button type="button" class="btn btn-primary px-5 py-2.5 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-2" onclick="resetKiosk()">
+      <i class="bi bi-arrow-repeat fs-5"></i>
+      <span>Next Voter</span>
     </button>
   </div>
 </div> <!-- Close sectionStep4 -->
