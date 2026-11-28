@@ -1712,6 +1712,56 @@ function showStep4Confirmation(receipt) {
   if (cSym) cSym.textContent = receipt.candidate_symbol;
   const ts = document.getElementById('vvpatTimestamp');
   if (ts) ts.textContent = receipt.timestamp;
+
+  const smsBox = document.getElementById('vvpatSmsStatusBox');
+  if (smsBox) {
+    const sms = receipt.sms;
+    if (sms) {
+      smsBox.classList.remove('d-none', 'bg-success-subtle', 'border-success-subtle', 'bg-primary-subtle', 'border-primary-subtle', 'bg-warning-subtle', 'border-warning-subtle');
+      const iconEl = document.getElementById('vvpatSmsIcon');
+      const titleEl = document.getElementById('vvpatSmsTitle');
+      const badgeEl = document.getElementById('vvpatSmsBadge');
+      const phoneEl = document.getElementById('vvpatSmsPhone');
+      const refEl = document.getElementById('vvpatSmsRef');
+      const msgEl = document.getElementById('vvpatSmsMessage');
+
+      if (sms.delivered_live) {
+        smsBox.classList.add('bg-success-subtle', 'border-success-subtle');
+        if (iconEl) iconEl.className = 'bi bi-chat-square-check-fill text-success';
+        if (titleEl) titleEl.textContent = 'SMS Sent to Registered Phone';
+        if (badgeEl) {
+          badgeEl.className = 'badge rounded-pill bg-success text-white';
+          badgeEl.textContent = `SENT (${sms.provider || 'SMS'})`;
+        }
+      } else if (sms.simulated) {
+        smsBox.classList.add('bg-primary-subtle', 'border-primary-subtle');
+        if (iconEl) iconEl.className = 'bi bi-chat-dots-fill text-primary';
+        if (titleEl) titleEl.textContent = 'Phone Message Queued (Demo Mode)';
+        if (badgeEl) {
+          badgeEl.className = 'badge rounded-pill bg-primary text-white';
+          badgeEl.textContent = 'SIMULATED';
+        }
+      } else {
+        smsBox.classList.add('bg-warning-subtle', 'border-warning-subtle');
+        if (iconEl) iconEl.className = 'bi bi-exclamation-circle-fill text-warning';
+        if (titleEl) titleEl.textContent = 'SMS Delivery Pending';
+        if (badgeEl) {
+          badgeEl.className = 'badge rounded-pill bg-warning text-dark';
+          badgeEl.textContent = sms.status || 'PENDING';
+        }
+      }
+
+      if (phoneEl) phoneEl.textContent = sms.masked_phone || receipt.masked_mobile || '--';
+      if (refEl) refEl.textContent = sms.receipt_ref || '--';
+      if (msgEl) {
+        msgEl.textContent = sms.error
+          ? `Vote recorded safely. SMS notice (${sms.error}): ${sms.message_preview || ''}`
+          : (sms.message_preview || 'Vote confirmation dispatched to your registered mobile number.');
+      }
+    } else {
+      smsBox.classList.add('d-none');
+    }
+  }
 }
 
 // Reset Kiosk for next voter (returns to leading start page)

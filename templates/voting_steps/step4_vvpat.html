@@ -7,7 +7,7 @@
   <p class="text-muted small mb-4">Your vote has been securely recorded.</p>
 
   <!-- Digital VVPAT Printed Slip Window -->
-  <div class="vvpat-slip text-start mb-4">
+  <div class="vvpat-slip text-start mb-3">
     <div class="text-center border-bottom pb-2 mb-3">
       <div class="fw-bold" style="font-size: 0.85rem;">VVPAT AUDIT SLIP</div>
       <div class="text-muted" style="font-size: 0.7rem;">Election Commission of India</div>
@@ -18,6 +18,26 @@
     <div class="small mb-2"><span class="text-muted">Symbol:</span> <strong id="vvpatCandidateSymbol">--</strong></div>
     <div class="small text-muted pt-2 border-top" style="font-size: 0.72rem;">
       Timestamp: <span id="vvpatTimestamp">--</span>
+    </div>
+  </div>
+
+  <!-- Registered Mobile Phone SMS Confirmation Banner -->
+  <div id="vvpatSmsStatusBox" class="rounded-3 border p-3 text-start mb-4 mx-auto d-none" style="max-width: 440px;">
+    <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+      <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 0.85rem;">
+        <i id="vvpatSmsIcon" class="bi bi-chat-dots-fill"></i>
+        <span id="vvpatSmsTitle">Phone Confirmation SMS</span>
+      </div>
+      <span id="vvpatSmsBadge" class="badge rounded-pill" style="font-size: 0.7rem;">--</span>
+    </div>
+    <div class="small mb-1">
+      <span class="text-muted">Recipient:</span>
+      <strong id="vvpatSmsPhone" class="font-monospace">--</strong>
+      <span class="text-muted ms-2">Ref:</span>
+      <code id="vvpatSmsRef" class="small">--</code>
+    </div>
+    <div id="vvpatSmsMessage" class="small text-secondary bg-white bg-opacity-75 rounded-2 p-2 border mt-2" style="font-size: 0.76rem; line-height: 1.4;">
+      --
     </div>
   </div>
 

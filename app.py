@@ -13,7 +13,8 @@ from database import (
     check_duplicate_aadhaar, check_duplicate_identity,
     get_dashboard_metrics, hash_aadhaar, mask_aadhaar,
     delete_voter, get_candidates, check_voter_voting_eligibility,
-    cast_vote, get_election_results
+    cast_vote, get_election_results,
+    get_sms_settings, save_sms_settings, get_sms_logs, get_sms_log_by_id
 )
 from sequence import get_next_voter_id, preview_next_voter_id
 from face_service import (
@@ -24,6 +25,7 @@ from fingerprint_service import enroll_simulated_fingerprint
 from qr_service import generate_and_save_voter_qr
 from id_card_service import generate_voter_id_card_pdf
 from location_service import lookup_district, lookup_pincode
+from sms_service import send_vote_confirmation_sms, dispatch_sms
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -336,6 +338,29 @@ def api_cast_vote():
 
     ip_addr = request.remote_addr or '127.0.0.1'
     res = cast_vote(voter_id, cand_id_int, ip_address=ip_addr)
+    if res['success']:
+        voter_mobile = res['receipt'].pop('voter_mobile', '')
+        allow_live_test = bool(app.config.get('SMS_TEST_FORCE_LIVE'))
+        sms_res = send_vote_confirmation_sms(
+            res['receipt'],
+            voter_mobile=voter_mobile,
+            ip_address=ip_addr,
+            is_testing=bool(app.testing and not allow_live_test),
+            force_live=allow_live_test
+        )
+        public_sms_summary = {
+            'success': sms_res['success'],
+            'status': sms_res['status'],
+            'provider': sms_res['provider'],
+            'masked_phone': sms_res['masked_phone'],
+            'receipt_ref': sms_res['receipt_ref'],
+            'message_preview': sms_res['message_preview'],
+            'delivered_live': sms_res['delivered_live'],
+            'simulated': sms_res['simulated'],
+            'error': sms_res['error']
+        }
+        res['sms'] = public_sms_summary
+        res['receipt']['sms'] = public_sms_summary
     status_code = 200 if res['success'] else 400
     return jsonify(res), status_code
 
@@ -703,6 +728,105 @@ def audit_logs():
     logs = conn.execute('SELECT * FROM enrollment_logs ORDER BY id DESC LIMIT 100').fetchall()
     conn.close()
     return render_template('audit_logs.html', logs=[dict(l) for l in logs])
+
+# ----------------- SMS NOTIFICATIONS & GATEWAY SETTINGS -----------------
+
+@app.route('/sms-notifications', methods=['GET', 'POST'])
+@admin_required
+def sms_notifications():
+    """Admin view for SMS gateway settings, test dispatch, and vote SMS logs."""
+    if request.method == 'POST':
+        updated = save_sms_settings({
+            'enabled': request.form.get('enabled') == 'on',
+            'provider': request.form.get('provider', 'simulation'),
+            'country_code': request.form.get('country_code', '+91'),
+            'twilio_account_sid': request.form.get('twilio_account_sid', ''),
+            'twilio_auth_token': request.form.get('twilio_auth_token', ''),
+            'twilio_from_number': request.form.get('twilio_from_number', ''),
+            'fast2sms_api_key': request.form.get('fast2sms_api_key', ''),
+            'fast2sms_route': request.form.get('fast2sms_route', 'q'),
+            'webhook_url': request.form.get('webhook_url', ''),
+            'webhook_token': request.form.get('webhook_token', '')
+        })
+        log_enrollment(
+            voter_id='SYSTEM',
+            action='SMS_SETTINGS_UPDATED',
+            details=f"Admin updated SMS Gateway provider to '{updated['provider'].upper()}' (Enabled: {updated['enabled']}).",
+            ip_address=request.remote_addr or '127.0.0.1'
+        )
+        flash(f"SMS Gateway configuration saved (Active provider: {updated['provider'].upper()}).", "success")
+        return redirect(url_for('sms_notifications'))
+
+    settings = get_sms_settings()
+    logs = get_sms_logs(limit=100)
+    secret_hints = {
+        'twilio_auth_token': ('••••' + settings['twilio_auth_token'][-4:]) if len(settings.get('twilio_auth_token', '')) >= 4 else ('Configured' if settings.get('twilio_auth_token') else ''),
+        'fast2sms_api_key': ('••••' + settings['fast2sms_api_key'][-4:]) if len(settings.get('fast2sms_api_key', '')) >= 4 else ('Configured' if settings.get('fast2sms_api_key') else ''),
+        'webhook_token': ('••••' + settings['webhook_token'][-4:]) if len(settings.get('webhook_token', '')) >= 4 else ('Configured' if settings.get('webhook_token') else ''),
+    }
+    stats = {
+        'total': len(logs),
+        'sent': sum(1 for row in logs if row['status'] == 'SENT'),
+        'simulated': sum(1 for row in logs if row['status'] == 'SIMULATED'),
+        'failed': sum(1 for row in logs if row['status'] == 'FAILED')
+    }
+    return render_template(
+        'sms_notifications.html',
+        settings=settings,
+        secret_hints=secret_hints,
+        logs=logs,
+        stats=stats
+    )
+
+@app.route('/api/sms/test', methods=['POST'])
+@admin_required
+def api_test_sms():
+    """Sends a test phone SMS from the Admin portal to verify gateway credentials."""
+    data = request.get_json(silent=True) or request.form
+    phone = str(data.get('phone', '')).strip()
+    custom_msg = str(data.get('message', '')).strip()
+    digits = ''.join(ch for ch in phone if ch.isdigit())
+
+    if len(digits) < 10:
+        return jsonify({'success': False, 'message': 'Please enter a valid 10-digit phone number.'}), 400
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    body = custom_msg or (
+        f"VaultVote ECI Test Alert: SMS gateway verification successful at {now_str}. "
+        f"Voters will receive vote confirmations on their registered mobile numbers."
+    )
+    allow_live_test = bool(app.config.get('SMS_TEST_FORCE_LIVE'))
+    res = dispatch_sms(
+        phone=phone,
+        message_body=body,
+        voter_id='ADMIN_TEST',
+        is_testing=bool(app.testing and not allow_live_test),
+        force_live=allow_live_test,
+        ip_address=request.remote_addr or '127.0.0.1'
+    )
+    status_code = 200 if res['success'] else 502
+    return jsonify(res), status_code
+
+@app.route('/api/sms/resend/<int:log_id>', methods=['POST'])
+@admin_required
+def api_resend_sms(log_id):
+    """Retries dispatching an existing SMS notification record."""
+    log_row = get_sms_log_by_id(log_id)
+    if not log_row:
+        return jsonify({'success': False, 'message': 'SMS log record not found.'}), 404
+
+    allow_live_test = bool(app.config.get('SMS_TEST_FORCE_LIVE'))
+    res = dispatch_sms(
+        phone=log_row['phone_number'],
+        message_body=log_row['message_body'],
+        voter_id=log_row['voter_id'],
+        receipt_ref=log_row.get('receipt_ref', ''),
+        is_testing=bool(app.testing and not allow_live_test),
+        force_live=allow_live_test,
+        ip_address=request.remote_addr or '127.0.0.1'
+    )
+    status_code = 200 if res['success'] else 502
+    return jsonify(res), status_code
 
 # ----------------- ASYNC DUPLICATE CHECK API -----------------
 

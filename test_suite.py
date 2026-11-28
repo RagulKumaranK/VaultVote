@@ -697,5 +697,120 @@ class TestVaultVoteSystem(unittest.TestCase):
         self.assertEqual(api_data['results']['total_votes'], results['total_votes'])
         print(f"[PASS] Election Results feature verified: {results['total_votes']} votes counted across {len(results['candidates'])} candidates.")
 
+    def test_18_post_vote_sms_notification(self):
+        """Verifies automatic post-vote SMS notification to the voter's respective mobile number and Admin SMS gateway controls."""
+        from unittest.mock import patch, MagicMock
+        from sms_service import normalize_phone, mask_phone
+        from database import get_sms_logs
+
+        # 1. Phone normalization & privacy masking
+        self.assertEqual(normalize_phone('9876543210'), ('+919876543210', '9876543210'))
+        self.assertEqual(normalize_phone('+91 98765 43210'), ('+919876543210', '9876543210'))
+        self.assertEqual(mask_phone('9876543210'), '+91 XXXXXX3210')
+
+        # 2. Register voter with specific mobile number and cast vote -> verify simulated SMS sent to that number
+        voter_1 = get_next_voter_id()
+        aadhaar_1 = random_aadhaar()
+        mobile_1 = '9123456789'
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO voters (
+                voter_id, full_name, dob, age, gender, father_name,
+                aadhaar_hash, aadhaar_masked, mobile, address, district, state, pincode,
+                face_status, fingerprint_status, qr_status, registration_status,
+                created_at, updated_at
+            ) VALUES (?, 'SMS Test Voter One', '1999-03-10', 27, 'Female', 'Father S',
+                ?, ?, ?, 'SMS Lane 1', 'Chennai', 'Tamil Nadu', '600001',
+                'ENROLLED', 'ENROLLED', 'ISSUED', 'COMPLETED',
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (voter_1, hash_aadhaar(aadhaar_1), f"XXXX-XXXX-{aadhaar_1[-4:]}", mobile_1))
+        conn.commit()
+        conn.close()
+
+        cast_res = self.client.post('/api/voting/cast_vote', json={'voter_id': voter_1, 'candidate_id': 1})
+        self.assertEqual(cast_res.status_code, 200)
+        cast_data = json.loads(cast_res.data)
+        self.assertTrue(cast_data['success'])
+        self.assertIn('sms', cast_data)
+        self.assertIn('sms', cast_data['receipt'])
+        self.assertEqual(cast_data['sms']['masked_phone'], '+91 XXXXXX6789')
+        self.assertNotIn('9123456789', json.dumps(cast_data), "Public kiosk JSON must not expose unmasked phone number.")
+        self.assertNotIn('Vijay', cast_data['sms']['message_preview'], "SMS body must preserve ballot secrecy.")
+        self.assertTrue(cast_data['sms']['simulated'])
+
+        logs = get_sms_logs(limit=20)
+        matching_logs = [row for row in logs if row['voter_id'] == voter_1]
+        self.assertEqual(len(matching_logs), 1)
+        self.assertEqual(matching_logs[0]['phone_number'], '+919123456789')
+        self.assertEqual(matching_logs[0]['status'], 'SIMULATED')
+
+        # 3. Verify Admin SMS Notifications route protection & rendering
+        unauth_client = app.test_client()
+        unauth_res = unauth_client.get('/sms-notifications')
+        self.assertEqual(unauth_res.status_code, 302)
+        self.assertIn('/login', unauth_res.headers['Location'])
+
+        self.client.post('/login', data={'username': 'admin', 'password': '123'}, follow_redirects=True)
+        admin_page = self.client.get('/sms-notifications')
+        self.assertEqual(admin_page.status_code, 200)
+        self.assertIn(b'Post-Vote Phone SMS Gateway', admin_page.data)
+        self.assertIn(b'+919123456789', admin_page.data)
+
+        # 4. Verify live Fast2SMS dispatch path using mocked HTTP gateway
+        voter_2 = get_next_voter_id()
+        aadhaar_2 = random_aadhaar()
+        mobile_2 = '9988776655'
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO voters (
+                voter_id, full_name, dob, age, gender, father_name,
+                aadhaar_hash, aadhaar_masked, mobile, address, district, state, pincode,
+                face_status, fingerprint_status, qr_status, registration_status,
+                created_at, updated_at
+            ) VALUES (?, 'SMS Live Voter Two', '1995-08-22', 31, 'Male', 'Father L',
+                ?, ?, ?, 'SMS Lane 2', 'Madurai', 'Tamil Nadu', '625001',
+                'ENROLLED', 'ENROLLED', 'ISSUED', 'COMPLETED',
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ''', (voter_2, hash_aadhaar(aadhaar_2), f"XXXX-XXXX-{aadhaar_2[-4:]}", mobile_2))
+        conn.commit()
+        conn.close()
+
+        try:
+            self.client.post('/sms-notifications', data={
+                'enabled': 'on',
+                'provider': 'fast2sms',
+                'country_code': '+91',
+                'fast2sms_api_key': 'test-fast2sms-secret-key',
+                'fast2sms_route': 'q'
+            }, follow_redirects=True)
+
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.content = b'{"return": true, "request_id": "F2S_REQ_999"}'
+            mock_resp.json.return_value = {'return': True, 'request_id': 'F2S_REQ_999'}
+
+            app.config['SMS_TEST_FORCE_LIVE'] = True
+            with patch('sms_service.requests.post', return_value=mock_resp) as mock_post:
+                live_cast = self.client.post('/api/voting/cast_vote', json={'voter_id': voter_2, 'candidate_id': 2})
+                self.assertEqual(live_cast.status_code, 200)
+                live_data = json.loads(live_cast.data)
+                self.assertTrue(live_data['sms']['delivered_live'])
+                self.assertEqual(live_data['sms']['status'], 'SENT')
+                self.assertEqual(live_data['sms']['provider'], 'FAST2SMS')
+                self.assertEqual(live_data['sms']['masked_phone'], '+91 XXXXXX6655')
+                self.assertTrue(mock_post.called)
+                sent_json = mock_post.call_args.kwargs['json']
+                self.assertEqual(sent_json['numbers'], '9988776655')
+                self.assertIn(voter_2, sent_json['message'])
+        finally:
+            app.config['SMS_TEST_FORCE_LIVE'] = False
+            self.client.post('/sms-notifications', data={
+                'enabled': 'on',
+                'provider': 'simulation',
+                'country_code': '+91'
+            }, follow_redirects=True)
+
+        print(f"[PASS] Post-vote SMS dispatch verified for {voter_1} (+91 XXXXXX6789) and live gateway mock for {voter_2} (+91 XXXXXX6655).")
+
 if __name__ == '__main__':
     unittest.main()

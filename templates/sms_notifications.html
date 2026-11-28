@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Notifications & Gateway — VaultVote{% endblock %}
+{% block page_heading %}SMS Notifications & Gateway{% endblock %}
+{% block page_subheading %}
+<span class="badge {% if settings.provider != 'simulation' and settings.enabled %}bg-success-subtle text-success border-success-subtle{% else %}bg-primary-subtle text-primary border-primary-subtle{% endif %} border px-2.5 py-1 rounded-pill ms-2">
+  <i class="bi bi-broadcast me-1"></i>
+  {% if not settings.enabled %}
+    Disabled
+  {% elif settings.provider == 'simulation' %}
+    Simulation Mode (Local Audit)
+  {% else %}
+    Live Gateway: {{ settings.provider|upper }}
+  {% endif %}
+</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+  <!-- TOP STATS ROW -->
+  <div class="row g-3 mb-4 align-items-stretch">
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-blue">
+          <i class="bi bi-chat-square-text-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value">{{ stats.total }}</div>
+          <div class="vv-stat-label">Total SMS Triggered</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-green">
+          <i class="bi bi-send-check-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value text-success">{{ stats.sent }}</div>
+          <div class="vv-stat-label">Delivered Live</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-purple">
+          <i class="bi bi-cpu-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value text-primary">{{ stats.simulated }}</div>
+          <div class="vv-stat-label">Simulated Logs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 d-flex">
+      <div class="vv-stat-card w-100">
+        <div class="vv-stat-icon vv-icon-gold">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div>
+          <div class="vv-stat-value {% if stats.failed > 0 %}text-danger{% endif %}">{{ stats.failed }}</div>
+          <div class="vv-stat-label">Failed Attempts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURATION & TEST DISPATCH ROW -->
+  <div class="row g-4 mb-4">
+
+    <!-- LEFT: GATEWAY SETTINGS -->
+    <div class="col-12 col-lg-7">
+      <div class="vv-card h-100 mb-0">
+        <div class="vv-card-header">
+          <h5><i class="bi bi-sliders text-primary"></i> Post-Vote Phone SMS Gateway</h5>
+          <span class="badge bg-light text-secondary border">Automatic on Vote Cast</span>
+        </div>
+
+        <div class="vv-card-body">
+          <p class="small text-secondary mb-3">
+            When a voter casts their ballot, VaultVote automatically dispatches a confirmation message to their registered mobile number (ballot selection stays confidential). Choose a live SMS gateway below to deliver messages to physical phones, or use <strong>Simulation Mode</strong> for offline testing.
+          </p>
+
+          <form method="POST" action="{{ url_for('sms_notifications') }}" id="smsSettingsForm">
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-5">
+                <label for="provider" class="form-label">SMS Provider</label>
+                <select class="form-select" id="provider" name="provider">
+                  <option value="simulation" {% if settings.provider == 'simulation' %}selected{% endif %}>Simulation / Offline Log</option>
+                  <option value="twilio" {% if settings.provider == 'twilio' %}selected{% endif %}>Twilio SMS API</option>
+                  <option value="fast2sms" {% if settings.provider == 'fast2sms' %}selected{% endif %}>Fast2SMS (India +91)</option>
+                  <option value="webhook" {% if settings.provider == 'webhook' %}selected{% endif %}>Custom HTTP / Android Gateway</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-3">
+                <label for="country_code" class="form-label">Country Code</label>
+                <input type="text" class="form-control font-monospace" id="country_code" name="country_code" value="{{ settings.country_code or '+91' }}" placeholder="+91">
+              </div>
+
+              <div class="col-12 col-md-4 d-flex align-items-end">
+                <div class="form-check form-switch p-2.5 px-3 bg-light rounded-3 border w-100 d-flex align-items-center justify-content-between m-0">
+                  <label class="form-check-label fw-semibold small text-dark mb-0" for="smsEnabledSwitch" style="cursor: pointer;">Enable SMS Alerts</label>
+                  <input class="form-check-input m-0" type="checkbox" role="switch" id="smsEnabledSwitch" name="enabled" {% if settings.enabled %}checked{% endif %} style="cursor: pointer;">
+                </div>
+              </div>
+            </div>
+
+            <!-- SIMULATION INFO -->
+            <div id="cfgSimulation" class="provider-section p-3 rounded-3 bg-primary-subtle border border-primary-subtle small text-primary-emphasis mb-3">
+              <i class="bi bi-info-circle-fill me-1"></i>
+              <strong>Offline Simulation Mode:</strong> Vote confirmations are generated and recorded in the SMS Audit Log below without external API calls. Switch to <strong>Twilio</strong>, <strong>Fast2SMS</strong>, or <strong>Custom Webhook</strong> when ready to deliver real cellular SMS messages.
+            </div>
+
+            <!-- TWILIO FIELDS -->
+            <div id="cfgTwilio" class="provider-section p-3 rounded-3 bg-light border mb-3 d-none">
+              <div class="fw-bold small text-dark mb-2"><i class="bi bi-phone-vibrate text-danger me-1"></i> Twilio Credentials</div>
+              <div class="row g-2.5">
+                <div class="col-12">
+                  <label for="twilio_account_sid" class="form-label small mb-1">Account SID</label>
+                  <input type="text" class="form-control form-control-sm font-monospace" id="twilio_account_sid" name="twilio_account_sid" value="{{ settings.twilio_account_sid }}" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="twilio_auth_token" class="form-label small mb-1">
+                    Auth Token
+                    {% if secret_hints.twilio_auth_token %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ secret_hints.twilio_auth_token }}</span>
+                    {% endif %}
+                  </label>
+                  <input type="password" class="form-control form-control-sm font-monospace" id="twilio_auth_token" name="twilio_auth_token" value="" placeholder="{% if secret_hints.twilio_auth_token %}Leave blank to keep saved token{% else %}Enter Twilio Auth Token{% endif %}">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="twilio_from_number" class="form-label small mb-1">Twilio From Number</label>
+                  <input type="text" class="form-control form-control-sm font-monospace" id="twilio_from_number" name="twilio_from_number" value="{{ settings.twilio_from_number }}" placeholder="+14155552671">
+                </div>
+              </div>
+            </div>
+
+            <!-- FAST2SMS FIELDS -->
+            <div id="cfgFast2sms" class="provider-section p-3 rounded-3 bg-light border mb-3 d-none">
+              <div class="fw-bold small text-dark mb-2"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Fast2SMS (India) Credentials</div>
+              <div class="row g-2.5">
+                <div class="col-12 col-md-8">
+                  <label for="fast2sms_api_key" class="form-label small mb-1">
+                    API Authorization Key
+                    {% if secret_hints.fast2sms_api_key %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ secret_hints.fast2sms_api_key }}</span>
+                    {% endif %}
+                  </label>
+                  <input type="password" class="form-control form-control-sm font-monospace" id="fast2sms_api_key" name="fast2sms_api_key" value="" placeholder="{% if secret_hints.fast2sms_api_key %}Leave blank to keep saved API key{% else %}Paste Fast2SMS Dev API Key{% endif %}">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="fast2sms_route" class="form-label small mb-1">SMS Route</label>
+                  <select class="form-select form-select-sm" id="fast2sms_route" name="fast2sms_route">
+                    <option value="q" {% if settings.fast2sms_route == 'q' %}selected{% endif %}>Quick SMS (q)</option>
+                    <option value="dlt" {% if settings.fast2sms_route == 'dlt' %}selected{% endif %}>DLT Route (dlt)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- WEBHOOK / ANDROID SMS GATEWAY FIELDS -->
+            <div id="cfgWebhook" class="provider-section p-3 rounded-3 bg-light border mb-3 d-none">
+              <div class="fw-bold small text-dark mb-2"><i class="bi bi-hdd-network-fill text-primary me-1"></i> HTTP / Android SMS Gateway Webhook</div>
+              <div class="row g-2.5">
+                <div class="col-12">
+                  <label for="webhook_url" class="form-label small mb-1">Webhook POST URL</label>
+                  <input type="url" class="form-control form-control-sm font-monospace" id="webhook_url" name="webhook_url" value="{{ settings.webhook_url }}" placeholder="http://192.168.1.50:8080/send-sms">
+                </div>
+                <div class="col-12">
+                  <label for="webhook_token" class="form-label small mb-1">
+                    Bearer Token (Optional)
+                    {% if secret_hints.webhook_token %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ secret_hints.webhook_token }}</span>
+                    {% endif %}
+                  </label>
+                  <input type="password" class="form-control form-control-sm font-monospace" id="webhook_token" name="webhook_token" value="" placeholder="{% if secret_hints.webhook_token %}Leave blank to keep saved token{% else %}Optional Authorization Bearer token{% endif %}">
+                </div>
+              </div>
+              <div class="form-text small text-muted mt-1">
+                Sends JSON <code>{to, phone, message, voter_id, receipt_ref}</code> via HTTP POST. Compatible with local Android SMS gateway apps or custom backend relays.
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end pt-2 border-top">
+              <button type="submit" class="btn btn-primary px-4 py-2 d-inline-flex align-items-center gap-2 fw-semibold">
+                <i class="bi bi-save-fill"></i>
+                <span>Save Gateway Settings</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TEST SMS CONSOLE -->
+    <div class="col-12 col-lg-5">
+      <div class="vv-card h-100 mb-0">
+        <div class="vv-card-header">
+          <h5><i class="bi bi-phone-fill text-success"></i> Send Test Phone Message</h5>
+        </div>
+
+        <div class="vv-card-body d-flex flex-column justify-content-between">
+          <div>
+            <p class="small text-secondary mb-3">
+              Verify that your configured SMS gateway delivers alerts to a real mobile handset before opening polling.
+            </p>
+
+            <div class="mb-3">
+              <label for="testSmsPhone" class="form-label">Recipient Mobile Number</label>
+              <div class="input-group">
+                <span class="input-group-text font-monospace fw-bold">{{ settings.country_code or '+91' }}</span>
+                <input type="tel" class="form-control font-monospace" id="testSmsPhone" maxlength="10" placeholder="9876543210">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="testSmsMessage" class="form-label">Custom Test Message <span class="text-muted fw-normal">(Optional)</span></label>
+              <textarea class="form-control small" id="testSmsMessage" rows="3" placeholder="Leave blank to send default VaultVote verification alert..."></textarea>
+            </div>
+
+            <div id="testSmsAlert" class="d-none mb-3"></div>
+          </div>
+
+          <button type="button" id="btnSendTestSms" class="btn btn-success w-100 py-2.5 fw-semibold d-inline-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-send-fill"></i>
+            <span>Dispatch Test SMS</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SMS DELIVERY LOGS TABLE -->
+  <div class="vv-card mb-0">
+    <div class="vv-card-header">
+      <h5><i class="bi bi-clock-history text-primary"></i> Post-Vote SMS Delivery History</h5>
+      <span class="badge bg-light text-secondary border">{{ logs|length }} Records</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light text-secondary">
+          <tr>
+            <th class="ps-4">Ref / ID</th>
+            <th>Timestamp</th>
+            <th>Voter</th>
+            <th>Phone Number</th>
+            <th style="min-width: 280px;">Message Sent</th>
+            <th>Provider</th>
+            <th>Status</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if logs %}
+            {% for log in logs %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold font-monospace text-dark">#{{ log.id }}</div>
+                <small class="text-muted font-monospace">{{ log.receipt_ref or '--' }}</small>
+              </td>
+              <td class="text-muted font-monospace text-nowrap">{{ log.sent_at }}</td>
+              <td>
+                <div class="fw-semibold text-dark">{{ log.voter_name }}</div>
+                <span class="badge bg-secondary-subtle text-dark font-monospace">{{ log.voter_id }}</span>
+              </td>
+              <td class="font-monospace fw-semibold text-primary text-nowrap">{{ log.phone_number }}</td>
+              <td>
+                <div class="text-dark" style="max-width: 360px; white-space: normal;">{{ log.message_body }}</div>
+                {% if log.error_message %}
+                  <div class="text-danger mt-1" style="font-size: 0.76rem;"><i class="bi bi-exclamation-circle me-1"></i>{{ log.error_message }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border font-monospace">{{ log.provider }}</span>
+              </td>
+              <td>
+                {% if log.status == 'SENT' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check2-all me-1"></i>SENT</span>
+                {% elif log.status == 'SIMULATED' %}
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-cpu me-1"></i>SIMULATED</span>
+                {% else %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle me-1"></i>{{ log.status }}</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-resend-sms d-inline-flex align-items-center gap-1" data-log-id="{{ log.id }}" title="Resend SMS">
+                  <i class="bi bi-arrow-clockwise"></i>
+                  <span>Resend</span>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="text-center py-5 text-muted">
+                <i class="bi bi-chat-square-dots fs-2 d-block mb-2"></i>
+                No vote SMS messages logged yet. Cast a ballot or send a test SMS above.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const providerSelect = document.getElementById('provider');
+  const sectionMap = {
+    simulation: document.getElementById('cfgSimulation'),
+    twilio: document.getElementById('cfgTwilio'),
+    fast2sms: document.getElementById('cfgFast2sms'),
+    webhook: document.getElementById('cfgWebhook')
+  };
+
+  function toggleProviderFields() {
+    const val = providerSelect.value;
+    Object.keys(sectionMap).forEach(key => {
+      if (sectionMap[key]) {
+        sectionMap[key].classList.toggle('d-none', key !== val);
+      }
+    });
+  }
+  if (providerSelect) {
+    providerSelect.addEventListener('change', toggleProviderFields);
+    toggleProviderFields();
+  }
+
+  const btnTest = document.getElementById('btnSendTestSms');
+  const testPhone = document.getElementById('testSmsPhone');
+  const testMsg = document.getElementById('testSmsMessage');
+  const testAlert = document.getElementById('testSmsAlert');
+
+  if (btnTest) {
+    btnTest.addEventListener('click', async function () {
+      const phone = (testPhone ? testPhone.value.trim() : '');
+      const message = (testMsg ? testMsg.value.trim() : '');
+
+      btnTest.disabled = true;
+      btnTest.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Dispatching...';
+      testAlert.className = 'd-none';
+
+      try {
+        const res = await fetch('{{ url_for("api_test_sms") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, message })
+        });
+        const data = await res.json();
+        testAlert.className = `alert ${data.success ? (data.simulated ? 'alert-info' : 'alert-success') : 'alert-danger'} small mb-3 py-2`;
+        if (data.success) {
+          const modeLabel = data.simulated ? 'Simulated (Log Saved)' : `Sent Live via ${data.provider}`;
+          testAlert.textContent = `${modeLabel} to ${data.masked_phone} — Ref: ${data.receipt_ref}. Reloading logs...`;
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          testAlert.textContent = data.error || data.message || 'Failed to dispatch SMS.';
+        }
+      } catch (err) {
+        testAlert.className = 'alert alert-danger small mb-3 py-2';
+        testAlert.textContent = 'Network error while dispatching test SMS.';
+      } finally {
+        btnTest.disabled = false;
+        btnTest.innerHTML = '<i class="bi bi-send-fill"></i> <span>Dispatch Test SMS</span>';
+      }
+    });
+  }
+
+  document.querySelectorAll('.btn-resend-sms').forEach(btn => {
+    btn.addEventListener('click', async function () {
+      const logId = this.getAttribute('data-log-id');
+      this.disabled = true;
+      this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      try {
+        const res = await fetch(`/api/sms/resend/${encodeURIComponent(logId)}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(`Resend failed: ${data.error || data.message}`);
+          window.location.reload();
+        }
+      } catch (e) {
+        alert('Network error retrying SMS.');
+        this.disabled = false;
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

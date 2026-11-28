@@ -168,6 +168,40 @@ def init_db():
         )
     ''')
 
+    # 10. SMS Notification Delivery Logs Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sms_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            voter_id TEXT NOT NULL,
+            phone_number TEXT NOT NULL,
+            message_body TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            status TEXT NOT NULL,
+            receipt_ref TEXT,
+            provider_message_id TEXT,
+            error_message TEXT,
+            sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 11. SMS Gateway Settings Table (Singleton row id = 1)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sms_settings (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            enabled INTEGER DEFAULT 1,
+            provider TEXT DEFAULT 'simulation',
+            country_code TEXT DEFAULT '+91',
+            twilio_account_sid TEXT DEFAULT '',
+            twilio_auth_token TEXT DEFAULT '',
+            twilio_from_number TEXT DEFAULT '',
+            fast2sms_api_key TEXT DEFAULT '',
+            fast2sms_route TEXT DEFAULT 'q',
+            webhook_url TEXT DEFAULT '',
+            webhook_token TEXT DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # Create Indexes for fast querying
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_voters_voter_id ON voters(voter_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_voters_aadhaar_hash ON voters(aadhaar_hash)')
@@ -175,6 +209,7 @@ def init_db():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_logs_voter_id ON enrollment_logs(voter_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_voter_id ON votes(voter_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_votes_candidate_id ON votes(candidate_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_sms_logs_voter_id ON sms_logs(voter_id)')
 
     # Seed Default Admin if table is empty
     cursor.execute('SELECT COUNT(*) as count FROM admin')
@@ -218,6 +253,29 @@ def init_db():
         }
         for cid, (b_img, s_img) in candidate_assets.items():
             cursor.execute('UPDATE candidates SET banner_image = ?, symbol_image = ? WHERE id = ?', (b_img, s_img, cid))
+
+    # Seed SMS settings singleton if missing
+    cursor.execute('SELECT COUNT(*) as count FROM sms_settings')
+    if cursor.fetchone()['count'] == 0:
+        cursor.execute('''
+            INSERT INTO sms_settings (
+                id, enabled, provider, country_code,
+                twilio_account_sid, twilio_auth_token, twilio_from_number,
+                fast2sms_api_key, fast2sms_route, webhook_url, webhook_token, updated_at
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            1 if config.SMS_ENABLED else 0,
+            config.SMS_PROVIDER,
+            config.SMS_COUNTRY_CODE,
+            config.TWILIO_ACCOUNT_SID,
+            config.TWILIO_AUTH_TOKEN,
+            config.TWILIO_FROM_NUMBER,
+            config.FAST2SMS_API_KEY,
+            config.FAST2SMS_ROUTE,
+            config.SMS_WEBHOOK_URL,
+            config.SMS_WEBHOOK_TOKEN,
+            datetime.now().isoformat()
+        ))
 
     conn.commit()
     conn.close()
@@ -517,7 +575,7 @@ def cast_vote(voter_id: str, candidate_id: int, ip_address: str = '127.0.0.1') -
     cursor = conn.cursor()
     
     # Verify voter exists
-    voter = cursor.execute('SELECT full_name, registration_status FROM voters WHERE voter_id = ?', (voter_id,)).fetchone()
+    voter = cursor.execute('SELECT full_name, mobile, registration_status FROM voters WHERE voter_id = ?', (voter_id,)).fetchone()
     if not voter:
         conn.close()
         return {"success": False, "message": f"Voter '{voter_id}' not found."}
@@ -562,9 +620,155 @@ def cast_vote(voter_id: str, candidate_id: int, ip_address: str = '127.0.0.1') -
         "receipt": {
             "voter_id": voter_id,
             "voter_name": voter['full_name'],
+            "voter_mobile": voter['mobile'],
             "candidate_name": candidate['name'],
             "candidate_party": candidate['party'],
             "candidate_symbol": candidate['symbol_name'],
             "timestamp": now_iso
         }
     }
+
+def get_sms_settings() -> dict:
+    """Returns active SMS gateway settings merged with environment defaults."""
+    conn = get_db_connection()
+    row = conn.execute('SELECT * FROM sms_settings WHERE id = 1').fetchone()
+    conn.close()
+
+    if not row:
+        return {
+            'enabled': bool(config.SMS_ENABLED),
+            'provider': config.SMS_PROVIDER,
+            'country_code': config.SMS_COUNTRY_CODE,
+            'twilio_account_sid': config.TWILIO_ACCOUNT_SID,
+            'twilio_auth_token': config.TWILIO_AUTH_TOKEN,
+            'twilio_from_number': config.TWILIO_FROM_NUMBER,
+            'fast2sms_api_key': config.FAST2SMS_API_KEY,
+            'fast2sms_route': config.FAST2SMS_ROUTE,
+            'webhook_url': config.SMS_WEBHOOK_URL,
+            'webhook_token': config.SMS_WEBHOOK_TOKEN,
+        }
+
+    settings = dict(row)
+    settings['enabled'] = bool(settings.get('enabled', 1))
+    # Fill blank DB fields from environment/config when available
+    env_fallbacks = {
+        'twilio_account_sid': config.TWILIO_ACCOUNT_SID,
+        'twilio_auth_token': config.TWILIO_AUTH_TOKEN,
+        'twilio_from_number': config.TWILIO_FROM_NUMBER,
+        'fast2sms_api_key': config.FAST2SMS_API_KEY,
+        'webhook_url': config.SMS_WEBHOOK_URL,
+        'webhook_token': config.SMS_WEBHOOK_TOKEN,
+    }
+    for key, env_val in env_fallbacks.items():
+        if not settings.get(key) and env_val:
+            settings[key] = env_val
+    return settings
+
+def save_sms_settings(data: dict) -> dict:
+    """Persists Admin SMS gateway configuration while preserving unchanged secrets."""
+    current = get_sms_settings()
+    enabled = 1 if data.get('enabled', True) else 0
+    provider = str(data.get('provider', 'simulation')).strip().lower()
+    if provider not in ('simulation', 'twilio', 'fast2sms', 'webhook'):
+        provider = 'simulation'
+
+    country_code = str(data.get('country_code', '+91')).strip() or '+91'
+    if not country_code.startswith('+'):
+        country_code = '+' + country_code
+
+    def _keep_or_update(field: str) -> str:
+        val = str(data.get(field, '')).strip()
+        if not val or val.startswith('••••'):
+            return current.get(field, '')
+        return val
+
+    conn = get_db_connection()
+    conn.execute('''
+        UPDATE sms_settings SET
+            enabled = ?,
+            provider = ?,
+            country_code = ?,
+            twilio_account_sid = ?,
+            twilio_auth_token = ?,
+            twilio_from_number = ?,
+            fast2sms_api_key = ?,
+            fast2sms_route = ?,
+            webhook_url = ?,
+            webhook_token = ?,
+            updated_at = ?
+        WHERE id = 1
+    ''', (
+        enabled,
+        provider,
+        country_code,
+        str(data.get('twilio_account_sid', '')).strip(),
+        _keep_or_update('twilio_auth_token'),
+        str(data.get('twilio_from_number', '')).strip(),
+        _keep_or_update('fast2sms_api_key'),
+        str(data.get('fast2sms_route', 'q')).strip() or 'q',
+        str(data.get('webhook_url', '')).strip(),
+        _keep_or_update('webhook_token'),
+        datetime.now().isoformat()
+    ))
+    conn.commit()
+    conn.close()
+    return get_sms_settings()
+
+def log_sms_notification(
+    voter_id: str,
+    phone_number: str,
+    message_body: str,
+    provider: str,
+    status: str,
+    receipt_ref: str = '',
+    provider_message_id: str = '',
+    error_message: str = ''
+) -> int:
+    """Inserts a vote SMS delivery record into sms_logs and returns its log ID."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO sms_logs (
+            voter_id, phone_number, message_body, provider,
+            status, receipt_ref, provider_message_id, error_message, sent_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        voter_id,
+        phone_number,
+        message_body,
+        provider,
+        status,
+        receipt_ref,
+        provider_message_id,
+        error_message,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+    log_id = int(cursor.lastrowid or 0)
+    conn.commit()
+    conn.close()
+    return log_id
+
+def get_sms_logs(limit: int = 100) -> list:
+    """Returns recent SMS notification logs joined with voter names."""
+    conn = get_db_connection()
+    rows = conn.execute('''
+        SELECT s.*, COALESCE(v.full_name, 'Test / System') AS voter_name
+        FROM sms_logs s
+        LEFT JOIN voters v ON s.voter_id = v.voter_id
+        ORDER BY s.id DESC
+        LIMIT ?
+    ''', (limit,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_sms_log_by_id(log_id: int):
+    """Fetches a single SMS log record by ID."""
+    conn = get_db_connection()
+    row = conn.execute('''
+        SELECT s.*, COALESCE(v.full_name, 'Test / System') AS voter_name
+        FROM sms_logs s
+        LEFT JOIN voters v ON s.voter_id = v.voter_id
+        WHERE s.id = ?
+    ''', (log_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None

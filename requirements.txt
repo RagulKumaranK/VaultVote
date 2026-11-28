@@ -19,6 +19,11 @@ Pillow>=10.0.0
 reportlab>=4.0.0
 fpdf2>=2.8.0
 
+# SMS Notifications & Environment Configuration
+twilio>=9.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+
 # Optional: dlib-based face_recognition (requires Visual Studio C++ on Windows)
 # The application automatically uses OpenCV's real-time Haar Cascade & Biometric
 # Feature Embedding when dlib is not installed, so this package is optional:

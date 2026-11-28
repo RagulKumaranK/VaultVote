@@ -68,6 +68,12 @@
         <span>Election Results</span>
       </a>
 
+      <a href="{{ url_for('sms_notifications') }}"
+        class="vv-nav-link {% if request.endpoint == 'sms_notifications' %}active{% endif %}">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span>SMS Notifications</span>
+      </a>
+
       <a href="{{ url_for('voting_portal') }}" class="vv-nav-link text-warning mt-2" title="Open Public Voting Booth">
         <i class="bi bi-box-seam-fill"></i>
         <span>Voting Booth</span>
